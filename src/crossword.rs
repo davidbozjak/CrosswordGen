@@ -112,7 +112,11 @@ impl Crossword
             if element_at_pos.is_some() {
                 if Some(element_at_pos.unwrap().char) == entry.get_at(counter)
                 {
-                    has_intersection = true;
+                    //do not allow matching on the first element of the clue ("_")
+                    if counter > 0 
+                    {
+                        has_intersection = true;
+                    }
                 }
                 else {
                     return false;

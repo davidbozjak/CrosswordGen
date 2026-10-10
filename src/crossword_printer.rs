@@ -3,6 +3,8 @@ use crate::crossword::Crossword;
 pub fn print(crossword: Crossword) {
     
     println!("Created crossword");
+    println!("");
+    println!("");
 
     let min_x = crossword.min_x();
     let max_x = crossword.max_x() + 1;
