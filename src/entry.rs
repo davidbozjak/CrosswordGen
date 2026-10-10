@@ -12,7 +12,7 @@ impl Entry {
         }
     }
 
-    pub fn getAt(self, i: usize) -> Option<char> {
+    pub fn get_at(&self, i: usize) -> Option<char> {
         self.key.chars().nth(i)
     }
 
