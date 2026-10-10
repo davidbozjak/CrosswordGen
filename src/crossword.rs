@@ -13,20 +13,28 @@ pub struct Crossword {
 
 impl Crossword
 {
-    pub fn generate(entries: &[&Entry], random_provider: &mut impl RandomProvider) -> Crossword {
-        let mut entries_working_copy = entries.to_vec();
+    pub fn generate<I>(entries: I, random_provider: &mut impl RandomProvider) -> Crossword 
+    where 
+        I: IntoIterator<Item = Entry>,
+        Entry: Clone
+    {
+        let mut entries_working_copy: Vec<Entry> = entries.into_iter().collect();
         
         let first_i = random_provider.next_u32() as usize % entries_working_copy.len();
-        let first = entries_working_copy[first_i];
+        let first = entries_working_copy[first_i].clone();
         entries_working_copy.remove(first_i);
 
-        Self::generate_with_first(first, &entries_working_copy, random_provider)
+        Self::generate_with_first(&first, entries_working_copy, random_provider)
     }
 
-    pub fn generate_with_first(first: &Entry, entries: &[&Entry], random_provider: &mut impl RandomProvider) -> Crossword {
+    pub fn generate_with_first<I>(first: &Entry, entries: I, random_provider: &mut impl RandomProvider) -> Crossword 
+    where 
+        I: IntoIterator<Item = Entry>,
+        Entry: Clone
+    {
         let mut cells:Vec<Cell> = Vec::new();
         
-        let mut entries_working_copy = entries.to_vec();
+        let mut entries_working_copy: Vec<Entry> = entries.into_iter().collect();
 
         let mut i: i32 = 0;
         for c in first.key_chars()
@@ -41,10 +49,10 @@ impl Crossword
         while entries_working_copy.len() > 0 {
 
             let next_i = random_provider.next_u32() as usize % entries_working_copy.len();
-            let next = entries_working_copy[next_i];
+            let next = entries_working_copy[next_i].clone();
             entries_working_copy.remove(next_i);
             
-            crossword.try_add_entry(next);
+            crossword.try_add_entry(&next);
 
         }
 
@@ -83,9 +91,9 @@ impl Crossword
 
         for x in min_x .. max_x {
             for y in min_y .. max_y {
-                if self.try_fit(entry, x, y, |w| w, |w| w + 1)
+                if self.try_fit(&entry, x, y, |w| w, |w| w + 1)
                 {
-                    self.insert_entry(entry, x, y, |w| w, |w| w + 1);
+                    self.insert_entry(&entry, x, y, |w| w, |w| w + 1);
 
                     return true;
                 }

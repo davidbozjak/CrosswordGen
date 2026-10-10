@@ -8,14 +8,19 @@ use entry::Entry;
 use random_provider::DefaultRandomProvider;
 
 fn main() {
-    let entry1 = Entry::new("danes", "pred jutri");
-    let entry2 = Entry::new("spore", "hyped video game from the '00s");
-    let entry3 = Entry::new("vladar", "oblast");
-    let entry4 = Entry::new("prosim", "obratno kot hvala");
-    let entry4 = Entry::new("mir", "obratno kot vojna");
-    let entry4 = Entry::new("vlak", "boljse kot avto in letalo");
+    let entries = [
+        Entry::new("danes", "pred jutri"),
+        Entry::new("spore", "hyped video game from the '00s"),
+        Entry::new("vladar", "oblast"),
+        Entry::new("prosim", "obratno kot hvala"),
+        Entry::new("mir", "obratno kot vojna"),
+        Entry::new("vlak", "boljse kot avto in letalo"),
+        Entry::new("oblak", "pojavi se takrat ko dezuje"),
+        Entry::new("luna", "polna enkrat vsakih 28 dni"),
+        Entry::new("urnik", "velika tabela casov")
+    ];
 
-    let crossword = Crossword::generate(&[&entry1, &entry2, &entry3, &entry4], & mut DefaultRandomProvider::new());
+    let crossword = Crossword::generate(entries, & mut DefaultRandomProvider::new());
 
     crossword_printer::print(crossword);
 }
