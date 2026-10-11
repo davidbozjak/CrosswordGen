@@ -6,8 +6,7 @@ pub struct Entry {
 
 impl Entry {
     pub fn new(key: &str, clue: &str) -> Entry {
-        let mut key_with_placeholder = key.to_string();
-        key_with_placeholder.insert(0, '_');
+        let mut key_with_placeholder = format!("_{}_", key);
 
         Entry {
             key: key_with_placeholder,

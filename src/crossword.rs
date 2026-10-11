@@ -67,8 +67,8 @@ impl Crossword
         let min_y = self.min_y() - entry.key_len() as i32;
         let max_y = self.max_y() + 1;
 
-        for x in min_x .. max_x {
-            for y in min_y .. max_y {
+        for y in min_y .. max_y {
+            for x in min_x .. max_x {
                 if self.try_fit(entry, x, y, |w| w, |w| w + 1)
                 {
                     self.insert_entry(entry, x, y, |w| w, |w| w + 1);
@@ -87,11 +87,11 @@ impl Crossword
         let min_y = self.min_y();
         let max_y = self.max_y() + 1;
 
-        for x in min_x .. max_x {
-            for y in min_y .. max_y {
-                if self.try_fit(&entry, x, y, |w| w, |w| w + 1)
+        for y in min_y .. max_y {
+            for x in min_x .. max_x {
+                if self.try_fit(&entry, x, y, |w| w + 1, |w| w)
                 {
-                    self.insert_entry(&entry, x, y, |w| w, |w| w + 1);
+                    self.insert_entry(&entry, x, y, |w| w + 1, |w| w);
 
                     return true;
                 }
@@ -118,8 +118,8 @@ impl Crossword
             if element_at_pos.is_some() {
                 if Some(element_at_pos.unwrap().char) == entry.get_key_at(counter)
                 {
-                    //do not allow matching on the first element of the clue ("_")
-                    if counter > 0 
+                    //do not allow matching on the first or last element ("_")
+                    if element_at_pos.unwrap().char != '_'
                     {
                         has_intersection = true;
                     }

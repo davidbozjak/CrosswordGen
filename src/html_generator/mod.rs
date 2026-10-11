@@ -20,7 +20,7 @@ r#"
 
     #grid {{
         display: grid;
-        grid-template-columns: repeat({no_rows}, 40px);
+        grid-template-columns: repeat({no_cols}, 40px);
         gap: 4px;
         justify-content: center;
     }}
@@ -73,7 +73,7 @@ r#"
 
     @media (max-width: 480px) {{
         #grid {{
-            grid-template-columns: repeat({no_cols}, 32px);
+            grid-template-columns: repeat({no_rows}, 32px);
         }}
         .cell {{
             width: 32px;
@@ -117,12 +117,14 @@ for (let r = 0; r < crossword.rows; r++) {{
         const cell = document.createElement("div");
         cell.classList.add("cell");
 
-        if (crossword.solution[r][c] === null) {{
+        let sol_content = crossword.solution[r][c];
+
+        if (sol_content === null) {{
             cell.classList.add("black");
         }}
-        else if (isNumber(crossword.solution[r][c])) {{
+        else if (isNumber(sol_content)) {{
             const clueBox = document.createElement("clueBox");
-            clueBox.textContent = crossword.solution[r][c];
+            clueBox.textContent = sol_content;
             cell.appendChild(clueBox);
         }} else {{
             const input = document.createElement("input");
@@ -208,17 +210,18 @@ fn generate_solutions_str(crossword: &Crossword) -> String
     let min_y = crossword.min_y();
     let max_y = crossword.max_y() + 1;
 
-    output.push_str(format!("\tcols: {}, \n", crossword.get_no_rows()).as_str());
-    output.push_str(format!("\trows: {}, \n", crossword.get_no_cols()).as_str());
+    output.push_str(format!("\tcols: {}, \n", crossword.get_no_cols()).as_str());
+    output.push_str(format!("\trows: {}, \n", crossword.get_no_rows()).as_str());
 
     output.push_str("solution: [ \n");
 
-    for x in min_x .. max_x {
+    for y in min_y .. max_y {
         output.push_str("\t\t[");
         
-        for y in min_y .. max_y {
+        for x in min_x .. max_x {
             output.push_str(
                 match crossword.get_char_at(x, y) {
+                    Some('_') => "null, ".to_string(),
                     Some(w) => format!("\"{}\", ", w),
                     None => "null, ".to_string()
                 }.as_str());
