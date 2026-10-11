@@ -23,7 +23,7 @@ fn main() {
 
     let entries = entries_apiresult.unwrap();
 
-    let crossword = Crossword::generate(entries, & mut DefaultRandomProvider::new());
+    let crossword = Crossword::generate(12, 12, entries, & mut DefaultRandomProvider::new());
 
     crossword_printer::print(&crossword);
 

@@ -20,12 +20,14 @@ pub struct Clue {
 
 pub struct Crossword {
     elements: Vec<Cell>,
-    clues: Vec<Clue>
+    clues: Vec<Clue>,
+    limit_x: u8,
+    limit_y: u8
 }
 
 impl Crossword
 {
-    pub fn generate<I>(entries: I, random_provider: &mut impl RandomProvider) -> Crossword 
+    pub fn generate<I>(limit_x: u8, limit_y: u8, entries: I, random_provider: &mut impl RandomProvider) -> Crossword 
     where 
         I: IntoIterator<Item = Entry>,
         Entry: Clone
@@ -36,15 +38,15 @@ impl Crossword
         let first = entries_working_copy[first_i].clone();
         entries_working_copy.remove(first_i);
 
-        Self::generate_with_first(&first, entries_working_copy, random_provider)
+        Self::generate_with_first(limit_x, limit_y, &first, entries_working_copy, random_provider)
     }
 
-    pub fn generate_with_first<I>(first: &Entry, entries: I, random_provider: &mut impl RandomProvider) -> Crossword 
+    pub fn generate_with_first<I>(limit_x: u8, limit_y: u8, first: &Entry, entries: I, random_provider: &mut impl RandomProvider) -> Crossword 
     where 
         I: IntoIterator<Item = Entry>,
         Entry: Clone
     {
-        let mut crossword = Crossword {elements: Vec::new(), clues: Vec::new()};
+        let mut crossword = Crossword {elements: Vec::new(), clues: Vec::new(), limit_x: limit_x, limit_y: limit_y};
 
         crossword.insert_entry(&first, 0, 0, |w| w + 1, |w| w);
 
@@ -169,6 +171,12 @@ impl Crossword
                 CellValue::Normal(_) => { return false; }
             }
             None => {}
+        }
+
+        // check that the crossword hasn't grown out of limits
+        if self.get_no_rows() > self.limit_y ||
+            self.get_no_cols() > self.limit_x {
+            return false;
         }
 
         //fit only successful if we actually found an intersection
