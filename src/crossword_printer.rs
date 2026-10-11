@@ -1,6 +1,6 @@
 use crate::crossword::Crossword;
 
-pub fn print(crossword: Crossword) {
+pub fn print(crossword: &Crossword) {
     
     println!("Created crossword");
     println!("");
@@ -25,6 +25,6 @@ pub fn print(crossword: Crossword) {
     println!("");
 
     for clue in crossword.get_clues() {
-        println!("{}", clue);
+        println!("{}: {}", clue.id, clue.text);
     }
 }

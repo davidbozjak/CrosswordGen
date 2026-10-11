@@ -7,10 +7,14 @@ struct Cell {
     char: char
 }
 
+pub struct Clue {
+    pub id: char,
+    pub text: String
+}
+
 pub struct Crossword {
     elements: Vec<Cell>,
-    clues: Vec<String>,
-    last_clue_no: u8,
+    clues: Vec<Clue>
 }
 
 impl Crossword
@@ -34,7 +38,7 @@ impl Crossword
         I: IntoIterator<Item = Entry>,
         Entry: Clone
     {
-        let mut crossword = Crossword {elements: Vec::new(), clues: Vec::new(), last_clue_no: 0};
+        let mut crossword = Crossword {elements: Vec::new(), clues: Vec::new()};
 
         crossword.insert_entry(&first, 0, 0, |w| w + 1, |w| w);
 
@@ -146,11 +150,10 @@ impl Crossword
             let element_at_pos = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
 
             if counter == 0 {
-                let clue_id = ('0' as u8 + self.last_clue_no) as char;
+                let last_clue_no = self.clues.len() as u8;
+                let clue_id = ('0' as u8 + last_clue_no) as char;
                 self.elements.push(Cell {pos_x: x, pos_y: y, char: clue_id});
-                self.clues.push(format!("{}: {}", clue_id, entry.get_clue()));
-                
-                self.last_clue_no += 1;
+                self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string()});
             }
             else if element_at_pos.is_none() {
                 self.elements.push(Cell {pos_x: x, pos_y: y, char: entry.get_key_at(counter).unwrap()});
@@ -200,7 +203,19 @@ impl Crossword
         }
     }
 
-    pub fn get_clues(&self) -> impl Iterator<Item = &String> + '_ {
+    pub fn get_clues(&self) -> impl Iterator<Item = &Clue> + '_ {
         self.clues.iter()
+    }
+
+    pub fn get_no_rows(&self) -> u8 {
+        let no_rows = self.max_y() - self.min_y() + 1;
+        assert!(no_rows > 0);
+        no_rows as u8
+    }
+
+    pub fn get_no_cols(&self) -> u8 {
+        let no_cols = self.max_x() - self.min_x() + 1;
+        assert!(no_cols > 0);
+        no_cols as u8
     }
 }

@@ -2,10 +2,13 @@ mod crossword;
 mod entry;
 mod random_provider;
 mod crossword_printer;
+mod html_generator;
 
 use crossword::Crossword;
 use entry::Entry;
 use random_provider::DefaultRandomProvider;
+use std::fs;
+
 
 fn main() {
     let entries = [
@@ -22,5 +25,7 @@ fn main() {
 
     let crossword = Crossword::generate(entries, & mut DefaultRandomProvider::new());
 
-    crossword_printer::print(crossword);
+    crossword_printer::print(&crossword);
+
+    fs::write("output/index.html", html_generator::generate_crossword_html(&crossword));
 }
