@@ -9,6 +9,8 @@ struct Cell {
 
 pub struct Crossword {
     elements: Vec<Cell>,
+    clues: Vec<String>,
+    last_clue_no: u8,
 }
 
 impl Crossword
@@ -32,19 +34,11 @@ impl Crossword
         I: IntoIterator<Item = Entry>,
         Entry: Clone
     {
-        let mut cells:Vec<Cell> = Vec::new();
-        
+        let mut crossword = Crossword {elements: Vec::new(), clues: Vec::new(), last_clue_no: 0};
+
+        crossword.insert_entry(&first, 0, 0, |w| w + 1, |w| w);
+
         let mut entries_working_copy: Vec<Entry> = entries.into_iter().collect();
-
-        let mut i: i32 = 0;
-        for c in first.key_chars()
-        {
-            cells.push(Cell { pos_x: i, pos_y: 0, char:c});
-            i += 1;
-        }
-
-        let mut crossword = Crossword {elements: cells};
-
         // algoritm pseudocode:
         while entries_working_copy.len() > 0 {
 
@@ -118,7 +112,7 @@ impl Crossword
             let element_at_pos = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
 
             if element_at_pos.is_some() {
-                if Some(element_at_pos.unwrap().char) == entry.get_at(counter)
+                if Some(element_at_pos.unwrap().char) == entry.get_key_at(counter)
                 {
                     //do not allow matching on the first element of the clue ("_")
                     if counter > 0 
@@ -151,11 +145,18 @@ impl Crossword
         while counter < entry.key_len() {
             let element_at_pos = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
 
-            if element_at_pos.is_none() {
-                self.elements.push(Cell {pos_x: x, pos_y: y, char: entry.get_at(counter).unwrap()});
+            if counter == 0 {
+                let clue_id = ('0' as u8 + self.last_clue_no) as char;
+                self.elements.push(Cell {pos_x: x, pos_y: y, char: clue_id});
+                self.clues.push(format!("{}: {}", clue_id, entry.get_clue()));
+                
+                self.last_clue_no += 1;
+            }
+            else if element_at_pos.is_none() {
+                self.elements.push(Cell {pos_x: x, pos_y: y, char: entry.get_key_at(counter).unwrap()});
             }
             else {
-                assert!(Some(element_at_pos.unwrap().char) == entry.get_at(counter))
+                assert!(Some(element_at_pos.unwrap().char) == entry.get_key_at(counter))
             }
 
             x = x_incrementor(x);
@@ -197,5 +198,9 @@ impl Crossword
             Some(w) => Some(w.char),
             None => None
         }
+    }
+
+    pub fn get_clues(&self) -> impl Iterator<Item = &String> + '_ {
+        self.clues.iter()
     }
 }

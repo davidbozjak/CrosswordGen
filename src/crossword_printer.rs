@@ -20,4 +20,11 @@ pub fn print(crossword: Crossword) {
         }
         println!("");
     }
+
+    println!("");
+    println!("");
+
+    for clue in crossword.get_clues() {
+        println!("{}", clue);
+    }
 }

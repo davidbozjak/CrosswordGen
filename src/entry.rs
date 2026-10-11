@@ -15,7 +15,11 @@ impl Entry {
         }
     }
 
-    pub fn get_at(&self, i: usize) -> Option<char> {
+    pub fn get_key(&self) -> &str {
+        &self.key
+    }
+
+    pub fn get_key_at(&self, i: usize) -> Option<char> {
         self.key.chars().nth(i)
     }
 
@@ -23,12 +27,16 @@ impl Entry {
         self.key.chars()
     }
 
-    pub fn clue_chars(&self) -> impl Iterator<Item = char> + '_ {
-        self.clue.chars()
-    }
-
     pub fn key_len(&self) -> usize {
         self.key.len()
+    }
+
+    pub fn get_clue(&self) -> &str {
+        &self.clue
+    }
+
+    pub fn clue_chars(&self) -> impl Iterator<Item = char> + '_ {
+        self.clue.chars()
     }
 
     pub fn clue_len(&self) -> usize {
