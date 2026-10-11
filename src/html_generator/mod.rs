@@ -31,11 +31,12 @@ r#"
         border: 1px solid #aaa;
         text-align: center;
         font-size: 22px;
+        position: relative;
     }}
 
     .cell input {{
-        width: 100%;
-        height: 100%;
+        width: 90%;
+        height: 90%;
         border: none;
         text-align: center;
         font-size: 22px;
@@ -43,14 +44,21 @@ r#"
 
     .clueBox {{
         width: 40px;
-        text-align: center;
-        vertical-align: middle;
-        font-size: 22px;
+        height: 40px;
         background: #e0e0e0;
+        font-size: 16px;
+        display: flex;
+        align-items: center;   /* vertical centering */
+        justify-content: center; /* horizontal centering */
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-bottom-right-radius: 6px;
     }}
 
-    .black {{
-        background: #333;
+    .transparent {{
+        background: none;
+        border: none;
     }}
 
     #validateBtn {{
@@ -120,10 +128,11 @@ for (let r = 0; r < crossword.rows; r++) {{
         let sol_content = crossword.solution[r][c];
 
         if (sol_content === null) {{
-            cell.classList.add("black");
+            cell.classList.add("transparent");
         }}
         else if (isNumber(sol_content)) {{
-            const clueBox = document.createElement("clueBox");
+            const clueBox = document.createElement("div");
+            clueBox.classList.add("clueBox");
             clueBox.textContent = sol_content;
             cell.appendChild(clueBox);
         }} else {{
