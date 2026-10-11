@@ -6,16 +6,16 @@ mod html_generator;
 
 use crossword::Crossword;
 use entry::Entry;
+use entry::EntryDto;
 use random_provider::DefaultRandomProvider;
 use std::fs;
 
 use reqwest::blocking::get;
-use serde::Deserialize;
 
 fn main() {
     let entries_apiresult = get_data();
 
-    if (entries_apiresult.is_err())
+    if entries_apiresult.is_err()
     {
         print!("API error, end");
         return;
@@ -27,38 +27,40 @@ fn main() {
 
     crossword_printer::print(&crossword);
 
-    fs::write("output/index.html", html_generator::generate_crossword_html(&crossword));
+    let _ = fs::write("output/index.html", html_generator::generate_crossword_html(&crossword));
 }
 
 fn get_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
-    let get_API_data: bool = true;
+    let fetch_from_api: bool = true;
 
     #[cfg(not(debug_assertions))]
     {
-        get_API_data = true;
+        fetch_from_api = true;
     }
 
-    if get_API_data {
+    if fetch_from_api {
         get_api_data()
     }
     else {
         let entries = [
-            Entry::new("danes", "pred jutri"),
-            Entry::new("spore", "hyped video game from the '00s"),
-            Entry::new("vladar", "oblast"),
-            Entry::new("prosim", "obratno kot hvala"),
-            Entry::new("mir", "obratno kot vojna"),
-            Entry::new("vlak", "boljse kot avto in letalo"),
-            Entry::new("oblak", "pojavi se takrat ko dezuje"),
-            Entry::new("luna", "polna enkrat vsakih 28 dni"),
-            Entry::new("urnik", "velika tabela casov")
+            Entry::new("danes".to_string(), "pred jutri".to_string()),
+            Entry::new("spore".to_string(), "hyped video game from the '00s".to_string()),
+            Entry::new("vladar".to_string(), "oblast".to_string()),
+            Entry::new("prosim".to_string(), "obratno kot hvala".to_string()),
+            Entry::new("mir".to_string(), "obratno kot vojna".to_string()),
+            Entry::new("vlak".to_string(), "boljse kot avto in letalo".to_string()),
+            Entry::new("oblak".to_string(), "pojavi se takrat ko dezuje".to_string()),
+            Entry::new("luna".to_string(), "polna enkrat vsakih 28 dni".to_string()),
+            Entry::new("urnik".to_string(), "velika tabela casov".to_string())
         ].to_vec();
         return  Ok(entries);
     }
 }
 
 fn get_api_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
-    let results: Vec<Entry> = get("https://sheetdb.io/api/v1/2ugi4z3mi964f")?.json()?;
+    let results: Vec<EntryDto> = get("https://sheetdb.io/api/v1/2ugi4z3mi964f")?.json()?;
 
-    Ok(results)
+    let entries:Vec<Entry> = results.into_iter().map(Entry::from).collect();
+
+    Ok(entries)
 }

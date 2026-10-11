@@ -1,4 +1,5 @@
 use crate::crossword::Crossword;
+use crate::crossword::CellValue;
 
 pub fn print(crossword: &Crossword) {
     
@@ -14,7 +15,9 @@ pub fn print(crossword: &Crossword) {
     for y in min_y .. max_y {
         for x in min_x .. max_x {
             match crossword.get_char_at(x, y) {
-                Some(w) => print!("{}", w),
+                Some(CellValue::ClueEnd()) => {}
+                Some(CellValue::Normal(w)) => print!("{}", w),
+                Some(CellValue::ClueId(w)) => print!("{:<1}", w),
                 None => print!(" ")
             };
         }

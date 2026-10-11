@@ -1,18 +1,30 @@
 use serde::Deserialize;
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Deserialize)]
+pub struct EntryDto {
+    key: String,
+    clue: String,
+}
+
+impl From<EntryDto> for Entry {
+    fn from(dto: EntryDto) -> Self {
+        Entry::new(dto.key, dto.clue)
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Entry {
     key: String,
     clue: String,
 }
 
 impl Entry {
-    pub fn new(key: &str, clue: &str) -> Entry {
-        let mut key_with_placeholder = format!("_{}_", key);
+    pub fn new(key: String, clue: String) -> Entry {
+        let key_with_placeholder = format!("{}", key);
 
-        Entry {
+        Self {
             key: key_with_placeholder,
-            clue: clue.to_string(),
+            clue: clue,
         }
     }
 
@@ -29,7 +41,7 @@ impl Entry {
     }
 
     pub fn key_len(&self) -> usize {
-        self.key.len()
+        self.key.chars().count()
     }
 
     pub fn get_clue(&self) -> &str {
@@ -41,6 +53,6 @@ impl Entry {
     }
 
     pub fn clue_len(&self) -> usize {
-        self.clue.len()
+        self.clue.chars().count()
     }
 }

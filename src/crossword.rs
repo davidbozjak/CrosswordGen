@@ -1,14 +1,20 @@
 use crate::entry::Entry;
 use crate::random_provider::RandomProvider;
 
+pub enum CellValue {
+    Normal(char),
+    ClueId(u32),
+    ClueEnd()
+}
+
 struct Cell {
     pos_x: i32,
     pos_y: i32,
-    char: char
+    value: CellValue
 }
 
 pub struct Clue {
-    pub id: char,
+    pub id: u32,
     pub text: String
 }
 
@@ -112,20 +118,40 @@ impl Crossword
 
         let mut has_intersection = false;
 
+        // first needs to be empty
+        let first = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
+        x = x_incrementor(x);
+        y = y_incrementor(y);
+
+        if first.is_some()
+        {
+            // Future improvement - handle 2 cases to make it more complex
+            // Clue_Id -> make it possible for 2 clues to start on the same square
+            // Clue_End -> replace clue end with new clue start
+            return false;
+        }
+
         while counter < entry.key_len() {
             let element_at_pos = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
 
             if element_at_pos.is_some() {
-                if Some(element_at_pos.unwrap().char) == entry.get_key_at(counter)
-                {
-                    //do not allow matching on the first or last element ("_")
-                    if element_at_pos.unwrap().char != '_'
+                match element_at_pos.unwrap().value {
+                    CellValue::ClueId(_) => 
                     {
-                        has_intersection = true;
+                        return false;
+                    },
+                    CellValue::ClueEnd() => {
+                        return false;
                     }
-                }
-                else {
-                    return false;
+                    CellValue::Normal(character) =>
+                    {
+                        if Some(character) == entry.get_key_at(counter) {
+                            has_intersection = true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
                 }
             }
 
@@ -134,6 +160,18 @@ impl Crossword
             counter += 1;
         }
 
+        // last needs to be not normal (both start and end is OK)
+        let last = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
+        match last {
+            Some(w) => match w.value {
+                CellValue::ClueId(_) => {}
+                CellValue::ClueEnd() => {}
+                CellValue::Normal(_) => { return false; }
+            }
+            None => {}
+        }
+
+        //fit only successful if we actually found an intersection
         has_intersection
     }
 
@@ -142,30 +180,37 @@ impl Crossword
         T1: Fn(i32)->i32,
         T2: Fn(i32)->i32
     {
+        let clue_id = self.clues.iter().count() as u32 + 1;
+        self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string()});
+
         let mut counter:usize = 0;
         let mut x = start_x;
         let mut y = start_y;
 
+        self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueId(clue_id)});
+        x = x_incrementor(x);
+        y = y_incrementor(y);
+
         while counter < entry.key_len() {
             let element_at_pos = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
 
-            if counter == 0 {
-                let last_clue_no = self.clues.len() as u8;
-                let clue_id = ('0' as u8 + last_clue_no) as char;
-                self.elements.push(Cell {pos_x: x, pos_y: y, char: clue_id});
-                self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string()});
-            }
-            else if element_at_pos.is_none() {
-                self.elements.push(Cell {pos_x: x, pos_y: y, char: entry.get_key_at(counter).unwrap()});
+            if element_at_pos.is_none() {
+                self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::Normal(entry.get_key_at(counter).unwrap())});
             }
             else {
-                assert!(Some(element_at_pos.unwrap().char) == entry.get_key_at(counter))
+                match element_at_pos.unwrap().value {
+                    CellValue::Normal(w) => assert!(Some(w) == entry.get_key_at(counter)),
+                    CellValue::ClueEnd() => assert!(true),
+                    CellValue::ClueId(_) => assert!(false)
+                };
             }
 
             x = x_incrementor(x);
             y = y_incrementor(y);
             counter += 1;
         }
+
+        self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueEnd()});
     }
 
     pub fn max_x(&self) -> i32 {
@@ -196,9 +241,9 @@ impl Crossword
         }
     }
 
-    pub fn get_char_at(&self, x: i32, y:i32) -> Option<char> {
+    pub fn get_char_at(&self, x: i32, y:i32) -> Option<&CellValue> {
         match self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y) {
-            Some(w) => Some(w.char),
+            Some(w) => Some(&w.value),
             None => None
         }
     }
