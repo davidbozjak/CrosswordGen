@@ -171,8 +171,16 @@ impl Crossword
         }
 
         // check that the crossword hasn't grown out of limits
-        if self.get_no_rows() > self.limit_y ||
-            self.get_no_cols() > self.limit_x {
+        let new_min_y = [self.min_y(), start_y, y].into_iter().min().unwrap();
+        let new_min_x = [self.min_x(), start_x, x].into_iter().min().unwrap();
+        let new_max_y = [self.max_y(), start_y, y].into_iter().max().unwrap();
+        let new_max_x = [self.max_x(), start_x, x].into_iter().max().unwrap();
+        
+        let new_potential_max_height = new_max_y - new_min_y + 1;
+        let new_potential_max_width = new_max_x - new_min_x + 1;
+        
+        if new_potential_max_height > (self.limit_y as i32) ||
+            new_potential_max_width > (self.limit_x as i32) {
             return false;
         }
 
