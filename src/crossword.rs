@@ -121,7 +121,7 @@ impl Crossword
         let mut has_intersection = false;
 
         // first needs to be empty
-        let first = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
+        let first = self.get_cell_at(x, y);
         x = x_incrementor(x);
         y = y_incrementor(y);
 
@@ -134,7 +134,7 @@ impl Crossword
         }
 
         while counter < entry.key_len() {
-            let element_at_pos = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
+            let element_at_pos = self.get_cell_at(x, y);
 
             if element_at_pos.is_some() {
                 match element_at_pos.unwrap().value {
@@ -163,7 +163,7 @@ impl Crossword
         }
 
         // last needs to be not normal (both start and end is OK)
-        let last = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
+        let last = self.get_cell_at(x, y);
         if let Some(w) = last {
             if let CellValue::Normal(_) = w.value {
                 return false;
@@ -205,7 +205,7 @@ impl Crossword
         y = y_incrementor(y);
 
         while counter < entry.key_len() {
-            let element_at_pos = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
+            let element_at_pos = self.get_cell_at(x, y);
 
             if element_at_pos.is_none() {
                 self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::Normal(entry.get_key_at(counter).unwrap())});
@@ -254,8 +254,15 @@ impl Crossword
         }
     }
 
-    pub fn get_char_at(&self, x: i32, y:i32) -> Option<&CellValue> {
+    pub fn get_cell_at(&self, x: i32, y:i32) -> Option<&Cell> {
         match self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y) {
+            Some(w) => Some(&w),
+            None => None
+        }
+    }
+
+    pub fn get_cellvalue_at(&self, x: i32, y:i32) -> Option<&CellValue> {
+        match self.get_cell_at(x, y) {
             Some(w) => Some(&w.value),
             None => None
         }

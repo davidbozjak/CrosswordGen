@@ -1,4 +1,5 @@
 use crate::crossword::Crossword;
+use crate::crossword::CellValue;
 
 pub fn generate_crossword_html(crossword: &Crossword) -> String {
     let output = format!(
@@ -229,10 +230,10 @@ fn generate_solutions_str(crossword: &Crossword) -> String
         
         for x in min_x .. max_x {
             output.push_str(
-                match crossword.get_char_at(x, y) {
-                    Some(crate::crossword::CellValue::ClueEnd()) => "null, ".to_string(),
-                    Some(crate::crossword::CellValue::Normal(w)) => format!("\"{}\", ", w),
-                    Some(crate::crossword::CellValue::ClueId(w)) => format!("\"{}\", ", w),
+                match crossword.get_cellvalue_at(x, y) {
+                    Some(CellValue::ClueEnd()) => "null, ".to_string(),
+                    Some(CellValue::Normal(w)) => format!("\"{}\", ", w),
+                    Some(CellValue::ClueId(w)) => format!("\"{}\", ", w),
                     None => "null, ".to_string()
                 }.as_str());
             }

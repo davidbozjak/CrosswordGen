@@ -14,7 +14,7 @@ pub fn print(crossword: &Crossword) {
 
     for y in min_y .. max_y {
         for x in min_x .. max_x {
-            match crossword.get_char_at(x, y) {
+            match crossword.get_cellvalue_at(x, y) {
                 Some(CellValue::ClueEnd()) => {}
                 Some(CellValue::Normal(w)) => print!("{}", w),
                 Some(CellValue::ClueId(w)) => print!("{:<1}", w),
