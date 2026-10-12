@@ -164,13 +164,10 @@ impl Crossword
 
         // last needs to be not normal (both start and end is OK)
         let last = self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y);
-        match last {
-            Some(w) => match w.value {
-                CellValue::ClueId(_) => {}
-                CellValue::ClueEnd() => {}
-                CellValue::Normal(_) => { return false; }
+        if let Some(w) = last {
+            if let CellValue::Normal(_) = w.value {
+                return false;
             }
-            None => {}
         }
 
         // check that the crossword hasn't grown out of limits
