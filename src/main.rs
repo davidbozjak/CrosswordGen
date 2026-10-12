@@ -6,7 +6,6 @@ mod html_generator;
 
 use crossword::Crossword;
 use entry::Entry;
-use entry::EntryDto;
 use random_provider::DefaultRandomProvider;
 use std::fs;
 
@@ -58,7 +57,7 @@ fn get_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
 }
 
 fn get_api_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
-    let results: Vec<EntryDto> = get("https://sheetdb.io/api/v1/2ugi4z3mi964f")?.json()?;
+    let results: Vec<Entry> = get("https://sheetdb.io/api/v1/2ugi4z3mi964f")?.json()?;
 
     let entries:Vec<Entry> = results.into_iter().map(Entry::from).collect();
 

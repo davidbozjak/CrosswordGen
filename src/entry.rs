@@ -1,31 +1,15 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-pub struct EntryDto {
-    key: String,
-    clue: String,
-}
-
-impl From<EntryDto> for Entry {
-    fn from(dto: EntryDto) -> Self {
-        Entry::new(dto.key, dto.clue)
-    }
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Entry {
     key: String,
     clue: String,
 }
 
 impl Entry {
+        
     pub fn new(key: String, clue: String) -> Entry {
-        let key_with_placeholder = format!("{}", key);
-
-        Self {
-            key: key_with_placeholder,
-            clue: clue,
-        }
+        Self {key: key, clue: clue}
     }
 
     pub fn get_key(&self) -> &str {
