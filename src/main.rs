@@ -30,7 +30,7 @@ fn main() {
 }
 
 fn get_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
-    let mut fetch_from_api: bool = true;
+    let mut fetch_from_api: bool = false;
 
     #[cfg(not(debug_assertions))]
     {

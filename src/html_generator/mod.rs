@@ -1,7 +1,10 @@
 use crate::crossword::Crossword;
 use crate::crossword::CellValue;
+use chrono;
 
 pub fn generate_crossword_html(crossword: &Crossword) -> String {
+    let date_str = chrono::Local::now().date_naive().checked_add_days(chrono::Days::new(1)).expect("REASON").format("%A, %Y-%m-%d").to_string();
+    
     let output = format!(
 r#"
 <!DOCTYPE html>
@@ -9,7 +12,7 @@ r#"
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simple Crossword</title>
+<title>Daily SE Mini {date}</title>
 
 <style>
     body {{
@@ -96,7 +99,7 @@ r#"
 </head>
 <body>
 
-<h2>Simple Crossword</h2>
+<h2>Daily SE Mini {date}</h2>
 
 <div id="grid"></div>
 
@@ -188,6 +191,7 @@ function isNumber(str){{
 </body>
 </html>
 "#,
+    date = date_str,
     no_cols = crossword.get_no_cols(),
     no_rows = crossword.get_no_rows(),
     solution_definition = generate_solutions_str(crossword),
