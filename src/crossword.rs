@@ -7,6 +7,12 @@ pub enum CellValue {
     ClueEnd()
 }
 
+#[derive(PartialEq)]
+pub enum ClueDirection {
+    Horizontal,
+    Vertical
+}
+
 struct Cell {
     pos_x: i32,
     pos_y: i32,
@@ -15,7 +21,8 @@ struct Cell {
 
 pub struct Clue {
     pub id: u32,
-    pub text: String
+    pub text: String,
+    pub direction: ClueDirection
 }
 
 pub struct Crossword {
@@ -48,7 +55,7 @@ impl Crossword
     {
         let mut crossword = Crossword {elements: Vec::new(), clues: Vec::new(), limit_x: limit_x, limit_y: limit_y};
 
-        crossword.insert_entry(&first, 0, 0, |w| w + 1, |w| w);
+        crossword.insert_entry(&first, 0, 0, ClueDirection::Horizontal);
 
         let mut entries_working_copy: Vec<Entry> = entries.into_iter().collect();
         // algoritm pseudocode:
@@ -79,7 +86,7 @@ impl Crossword
             for x in min_x .. max_x {
                 if self.try_fit(entry, x, y, |w| w, |w| w + 1)
                 {
-                    self.insert_entry(entry, x, y, |w| w, |w| w + 1);
+                    self.insert_entry(entry, x, y, ClueDirection::Vertical);
 
                     return true;
                 }
@@ -99,7 +106,7 @@ impl Crossword
             for x in min_x .. max_x {
                 if self.try_fit(&entry, x, y, |w| w + 1, |w| w)
                 {
-                    self.insert_entry(&entry, x, y, |w| w + 1, |w| w);
+                    self.insert_entry(&entry, x, y, ClueDirection::Horizontal);
 
                     return true;
                 }
@@ -188,13 +195,20 @@ impl Crossword
         has_intersection
     }
 
-    fn insert_entry<T1, T2>(&mut self, entry: &Entry, start_x: i32, start_y: i32, x_incrementor: T1, y_incrementor: T2)
-    where
-        T1: Fn(i32)->i32,
-        T2: Fn(i32)->i32
+    fn insert_entry(&mut self, entry: &Entry, start_x: i32, start_y: i32, direction: ClueDirection)
     {
+        let x_incrementor = match direction {
+            ClueDirection::Horizontal => |w| w + 1,
+            ClueDirection::Vertical => |w| w
+        };
+
+        let y_incrementor = match direction {
+            ClueDirection::Vertical => |w| w + 1,
+            ClueDirection::Horizontal => |w| w
+        };
+
         let clue_id = self.clues.iter().count() as u32 + 1;
-        self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string()});
+        self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string(), direction});
 
         let mut counter:usize = 0;
         let mut x = start_x;

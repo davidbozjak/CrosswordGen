@@ -1,5 +1,6 @@
 use crate::crossword::Crossword;
 use crate::crossword::CellValue;
+use crate::crossword::ClueDirection;
 
 pub fn print(crossword: &Crossword) {
     
@@ -27,7 +28,17 @@ pub fn print(crossword: &Crossword) {
     println!("");
     println!("");
 
-    for clue in crossword.get_clues() {
+    println!("Horizontal clues:");
+
+    for clue in crossword.get_clues().filter(|c| c.direction == ClueDirection::Horizontal) {
+        println!("{}: {}", clue.id, clue.text);
+    }
+
+    println!("");
+
+    println!("Vertical clues:");
+
+    for clue in crossword.get_clues().filter(|c| c.direction == ClueDirection::Vertical) {
         println!("{}: {}", clue.id, clue.text);
     }
 }

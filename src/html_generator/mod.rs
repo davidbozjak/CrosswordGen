@@ -1,5 +1,6 @@
 use crate::crossword::Crossword;
 use crate::crossword::CellValue;
+use crate::crossword::ClueDirection;
 use chrono;
 
 pub fn generate_crossword_html(crossword: &Crossword) -> String {
@@ -106,8 +107,10 @@ r#"
 <button id="validateBtn">Validate</button>
 
 <div id="clues">
-    <h3>Clues</h3>
-    <ul id="clueList"></ul>
+    <h3>Horizotnal</h3>
+    <ul id="horizontalClueList"></ul>
+    <h3>Vertical</h3>
+    <ul id="verticalClueList"></ul>
 </div>
 
 <script>
@@ -154,11 +157,18 @@ for (let r = 0; r < crossword.rows; r++) {{
 // ------------------------------
 // Display clues
 // ------------------------------
-const clueList = document.getElementById("clueList");
-crossword.clues.forEach(cl => {{
+const horizontalClueList = document.getElementById("horizontalClueList");
+crossword.horizontalClues.forEach(cl => {{
     const li = document.createElement("li");
     li.textContent = `${{cl.number}}: ${{cl.clue}}`;
-    clueList.appendChild(li);
+    horizontalClueList.appendChild(li);
+}});
+
+const verticalClueList = document.getElementById("verticalClueList");
+crossword.verticalClues.forEach(cl => {{
+    const li = document.createElement("li");
+    li.textContent = `${{cl.number}}: ${{cl.clue}}`;
+    verticalClueList.appendChild(li);
 }});
 
 // ------------------------------
@@ -254,16 +264,27 @@ fn generate_clues_str(crossword: &Crossword) -> String
 {
     /*
     Output expected to look like this:
-    clues: [
+    horizontalClues: [
+            {{ number: 1, clue: "Greeting (5 letters)" }},
+            {{ number: 2, clue: "Italian food (5 letters)" }},
+            {{ number: 3, clue: "Someone who writes software (5 letters)" }}
+        ];
+    verticalClues: [
             {{ number: 1, clue: "Greeting (5 letters)" }},
             {{ number: 2, clue: "Italian food (5 letters)" }},
             {{ number: 3, clue: "Someone who writes software (5 letters)" }}
         ]
     */
 
-    let mut output:String = String::from("clues: [");
+    let mut output:String = String::from("horizontalClues: [\n");
 
-    for clue in crossword.get_clues() {
+    for clue in crossword.get_clues().filter(|w| w.direction == ClueDirection::Horizontal) {
+        output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.id, clue.text).as_str());
+    }
+
+    output.push_str("],  \nverticalClues: [\n");
+
+    for clue in crossword.get_clues().filter(|w|w.direction == ClueDirection::Vertical) {
         output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.id, clue.text).as_str());
     }
 
