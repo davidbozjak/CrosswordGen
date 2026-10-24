@@ -300,7 +300,18 @@ impl Crossword
             counter += 1;
         }
 
-        self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueEnd()});
+        let last = self.get_cell_at(x, y);
+
+        if last.is_none() {
+            self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueEnd()});
+        }
+        else {
+            match last.unwrap().value {
+                CellValue::Normal(_) => panic!("Should never happen, bug in try_fit logic"),
+                CellValue::ClueEnd() => {}, // it is OK and expected that clue end can be shared
+                CellValue::ClueStart(_) => panic!("Should never happen, bug in try_fit logic"),
+            };
+        }
     }
 
     pub fn max_x(&self) -> i32 {
@@ -387,7 +398,25 @@ impl Crossword
 mod tests {
     use crate::random_provider::FakeRandomProvider;
 
-use super::*;
+    use super::*;
+
+    #[test]
+    fn end_cell_can_be_shared()
+    {
+        let entries = [
+            Entry::new("abc".to_string(), "abc".to_string()),
+            Entry::new("defb".to_string(), "defb".to_string()),
+            Entry::new("dghi".to_string(), "dghi".to_string()),
+            Entry::new("hjk".to_string(), "hjk".to_string()),
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        //crate::crossword_printer::print(&crossword);
+
+        assert!(crossword.get_clues().count() == 4);
+        assert!(crossword.elements.iter().filter(|w| w.value == CellValue::ClueEnd()).count() == 3);    // one ClueEnd is sahred between clues 1 and 4
+    }
 
     #[test]
     fn adds_horizontalvertical_clue_horizontalfirst()
