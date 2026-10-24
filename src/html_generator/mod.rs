@@ -1,6 +1,7 @@
 use crate::crossword::Crossword;
 use crate::crossword::CellValue;
 use crate::crossword::ClueDirection;
+use crate::crossword::ClueStartCell;
 use chrono;
 
 pub fn generate_crossword_html(crossword: &Crossword) -> String {
@@ -247,7 +248,11 @@ fn generate_solutions_str(crossword: &Crossword) -> String
                 match crossword.get_cellvalue_at(x, y) {
                     Some(CellValue::ClueEnd()) => "null, ".to_string(),
                     Some(CellValue::Normal(w)) => format!("\"{}\", ", w),
-                    Some(CellValue::ClueId(w)) => format!("\"{}\", ", w),
+                    Some(CellValue::ClueStart(w)) => match w {
+                        ClueStartCell::Horizontal(ww)
+                        | ClueStartCell::Vertical(ww)
+                        | ClueStartCell::HorizontalVertical(ww) => format!("\"{}\", ", ww),
+                    }
                     None => "null, ".to_string()
                 }.as_str());
             }

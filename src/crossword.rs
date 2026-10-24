@@ -1,13 +1,22 @@
 use crate::entry::Entry;
 use crate::random_provider::RandomProvider;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum ClueStartCell
+{
+    Horizontal(u32),
+    Vertical(u32),
+    HorizontalVertical(u32)
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CellValue {
     Normal(char),
-    ClueId(u32),
+    ClueStart(ClueStartCell),
     ClueEnd()
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ClueDirection {
     Horizontal,
     Vertical
@@ -84,7 +93,7 @@ impl Crossword
 
         for y in min_y .. max_y {
             for x in min_x .. max_x {
-                if self.try_fit(entry, x, y, |w| w, |w| w + 1)
+                if self.try_fit(entry, x, y, ClueDirection::Vertical)
                 {
                     self.insert_entry(entry, x, y, ClueDirection::Vertical);
 
@@ -104,7 +113,7 @@ impl Crossword
 
         for y in min_y .. max_y {
             for x in min_x .. max_x {
-                if self.try_fit(&entry, x, y, |w| w + 1, |w| w)
+                if self.try_fit(&entry, x, y, ClueDirection::Horizontal)
                 {
                     self.insert_entry(&entry, x, y, ClueDirection::Horizontal);
 
@@ -116,11 +125,10 @@ impl Crossword
         false
     }
 
-    fn try_fit<T1, T2>(&self, entry: &Entry, start_x: i32, start_y: i32, x_incrementor: T1, y_incrementor: T2) -> bool
-    where
-        T1: Fn(i32)->i32,
-        T2: Fn(i32)->i32
+    fn try_fit(&self, entry: &Entry, start_x: i32, start_y: i32, direction: ClueDirection) -> bool
     {
+        let (x_incrementor, y_incrementor) = Crossword::get_incrementors_for_direction(direction);
+
         let mut counter:usize = 0;
         let mut x = start_x;
         let mut y = start_y;
@@ -132,12 +140,33 @@ impl Crossword
         x = x_incrementor(x);
         y = y_incrementor(y);
 
-        if first.is_some()
-        {
-            // Future improvement - handle 2 cases to make it more complex
-            // Clue_Id -> make it possible for 2 clues to start on the same square
+        if let Some(first) = first {
+            // Future improvement
             // Clue_End -> replace clue end with new clue start
-            return false;
+            match first.value {
+                CellValue::ClueEnd() => return false,
+                CellValue::Normal(_) => return false,
+                CellValue::ClueStart(start_value) => {
+                    // return false if it is the same direction or if it's already both. If it's oposite then continue
+                    match direction
+                    {
+                        ClueDirection::Horizontal => {
+                            match start_value {
+                                ClueStartCell::Horizontal(_) => return false,
+                                ClueStartCell::Vertical(_) => {},
+                                ClueStartCell::HorizontalVertical(_) => return false,
+                            }
+                        },
+                        ClueDirection::Vertical => {
+                            match start_value {
+                                ClueStartCell::Horizontal(_) => {},
+                                ClueStartCell::Vertical(_) => return false,
+                                ClueStartCell::HorizontalVertical(_) => return false,
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         while counter < entry.key_len() {
@@ -145,7 +174,7 @@ impl Crossword
 
             if element_at_pos.is_some() {
                 match element_at_pos.unwrap().value {
-                    CellValue::ClueId(_) => 
+                    CellValue::ClueStart(_) => 
                     {
                         return false;
                     },
@@ -197,24 +226,58 @@ impl Crossword
 
     fn insert_entry(&mut self, entry: &Entry, start_x: i32, start_y: i32, direction: ClueDirection)
     {
-        let x_incrementor = match direction {
-            ClueDirection::Horizontal => |w| w + 1,
-            ClueDirection::Vertical => |w| w
-        };
+        let (x_incrementor, y_incrementor) = Crossword::get_incrementors_for_direction(direction);
 
-        let y_incrementor = match direction {
-            ClueDirection::Vertical => |w| w + 1,
-            ClueDirection::Horizontal => |w| w
-        };
-
-        let clue_id = self.clues.iter().count() as u32 + 1;
-        self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string(), direction});
-
+        // assign the preliminary id, but it might change. We will want to insert either way but it could be that we are intersecting with an existing clue and we will want to use that id instead of creating a new one
+        let mut clue_id = self.clues.iter().count() as u32 + 1;
+        
         let mut counter:usize = 0;
         let mut x = start_x;
         let mut y = start_y;
 
-        self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueId(clue_id)});
+        let first = self.get_mut_cell_at(x, y);
+
+        if let Some(first) = first {
+            match first.value {
+                CellValue::ClueEnd() => panic!("Not supporting replacing end with start (yet)"),
+                CellValue::Normal(_) => panic!("Should never happen, bug in try_fit logic"),
+                CellValue::ClueStart(start_value) => {
+                    match direction
+                    {
+                        ClueDirection::Horizontal => {
+                            match start_value {
+                                ClueStartCell::Horizontal(_) => panic!("Horizontal already filled, should never happen, bug in try_fit logic"),
+                                ClueStartCell::Vertical(vertical_id) => {
+                                    clue_id = vertical_id;
+                                    first.value = CellValue::ClueStart(ClueStartCell::HorizontalVertical(clue_id));
+                                },
+                                ClueStartCell::HorizontalVertical(_) => panic!("Both already filled, should never happen, bug in try_fit logic"),
+                            }
+                        },
+                        ClueDirection::Vertical => {
+                            match start_value {
+                                ClueStartCell::Horizontal(horizontal_id) => {
+                                    clue_id = horizontal_id;
+                                    first.value = CellValue::ClueStart(ClueStartCell::HorizontalVertical(clue_id));
+                                },
+                                ClueStartCell::Vertical(_) => panic!("Vertical already filled, should never happen, bug in try_fit logic"),
+                                ClueStartCell::HorizontalVertical(_) => panic!("Both already filled, should never happen, bug in try_fit logic"),
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            match direction {
+                ClueDirection::Horizontal => self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueStart(ClueStartCell::Horizontal(clue_id))}),
+                ClueDirection::Vertical => self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueStart(ClueStartCell::Vertical(clue_id))})
+            };
+        }
+
+        self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string(), direction});
+
+        // First element was handled above, iterate once before handling next elements
         x = x_incrementor(x);
         y = y_incrementor(y);
 
@@ -227,8 +290,8 @@ impl Crossword
             else {
                 match element_at_pos.unwrap().value {
                     CellValue::Normal(w) => assert!(Some(w) == entry.get_key_at(counter)),
-                    CellValue::ClueEnd() => assert!(true),
-                    CellValue::ClueId(_) => assert!(false)
+                    CellValue::ClueEnd() => {},
+                    CellValue::ClueStart(_) => panic!("Should never happen, bug in try_fit logic"),
                 };
             }
 
@@ -268,9 +331,23 @@ impl Crossword
         }
     }
 
-    pub fn get_cell_at(&self, x: i32, y:i32) -> Option<&Cell> {
+    fn get_mut_cell_at(&mut self, x: i32, y:i32) -> Option<&mut Cell> {
+        match self.elements.iter_mut().find(|w|w.pos_x == x && w.pos_y == y) {
+            Some(w) => Some(w),
+            None => None
+        }
+    }
+
+    fn get_mut_cellvalue_at(&mut self, x: i32, y:i32) -> Option<&mut CellValue> {
+        match self.get_mut_cell_at(x, y) {
+            Some(w) => Some(&mut w.value),
+            None => None
+        }
+    }
+
+    fn get_cell_at(&self, x: i32, y:i32) -> Option<&Cell> {
         match self.elements.iter().find(|w|w.pos_x == x && w.pos_y == y) {
-            Some(w) => Some(&w),
+            Some(w) => Some(w),
             None => None
         }
     }
@@ -296,5 +373,67 @@ impl Crossword
         let no_cols = self.max_x() - self.min_x() + 1;
         assert!(no_cols > 0);
         no_cols as u8
+    }
+
+    pub fn get_incrementors_for_direction(direction: ClueDirection) -> (fn(i32)->i32, fn(i32)->i32) {
+        match direction {
+            ClueDirection::Horizontal => (|w| w + 1, |w| w),
+            ClueDirection::Vertical => (|w| w, |w| w + 1)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::random_provider::FakeRandomProvider;
+
+use super::*;
+
+    #[test]
+    fn adds_horizontalvertical_clue_horizontalfirst()
+    {
+        let entries = [
+            Entry::new("abc".to_string(), "abc".to_string()),
+            Entry::new("cdef".to_string(), "cdef".to_string()),
+            Entry::new("dghi".to_string(), "dghi".to_string()),
+            Entry::new("jiklm".to_string(), "jiklm".to_string()),
+            Entry::new("jnop".to_string(), "jnop".to_string()),
+            Entry::new("hrs".to_string(), "hrs".to_string()),
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        //crate::crossword_printer::print(&crossword);
+
+        let clues = crossword.get_clues().collect::<Vec<&Clue>>();
+        assert!(clues.iter().count() == 6);
+        assert!(clues.iter().all(|w| w.id >= 1 && w.id <= 5));   //the ID 5 is double
+
+        let cellvalue = crossword.get_cellvalue_at(5, 0);
+        assert!((cellvalue.is_some()));
+        assert!((cellvalue.unwrap() == &CellValue::ClueStart(ClueStartCell::HorizontalVertical(5))));
+    }
+
+    #[test]
+    fn adds_horizontalvertical_clue_verticalfirst()
+    {
+        let entries = [
+            Entry::new("abcd".to_string(), "abcd".to_string()),
+            Entry::new("bef".to_string(), "bef".to_string()),
+            Entry::new("gdhi".to_string(), "gdhi".to_string()),
+            Entry::new("jgkl".to_string(), "jgkl".to_string()),
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        //crate::crossword_printer::print(&crossword);
+
+        let clues = crossword.get_clues().collect::<Vec<&Clue>>();
+        assert!(clues.iter().count() == 4);
+        assert!(clues.iter().all(|w| w.id >= 1 && w.id <= 3));   //the ID 5 is double
+
+        let cellvalue = crossword.get_cellvalue_at(2, -1);
+        assert!((cellvalue.is_some()));
+        assert!((cellvalue.unwrap() == &CellValue::ClueStart(ClueStartCell::HorizontalVertical(2))));
     }
 }

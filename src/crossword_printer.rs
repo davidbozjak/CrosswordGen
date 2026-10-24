@@ -1,6 +1,7 @@
 use crate::crossword::Crossword;
 use crate::crossword::CellValue;
 use crate::crossword::ClueDirection;
+use crate::crossword::ClueStartCell;
 
 pub fn print(crossword: &Crossword) {
     
@@ -18,7 +19,11 @@ pub fn print(crossword: &Crossword) {
             match crossword.get_cellvalue_at(x, y) {
                 Some(CellValue::ClueEnd()) => {}
                 Some(CellValue::Normal(w)) => print!("{}", w),
-                Some(CellValue::ClueId(w)) => print!("{:<1}", w),
+                Some(CellValue::ClueStart(w)) => match w {
+                        ClueStartCell::Horizontal(ww)
+                        | ClueStartCell::Vertical(ww)
+                        | ClueStartCell::HorizontalVertical(ww) => print!("{}", ww),
+                    }
                 None => print!(" ")
             };
         }
