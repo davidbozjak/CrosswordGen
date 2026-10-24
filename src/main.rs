@@ -3,6 +3,7 @@ mod entry;
 mod random_provider;
 mod crossword_printer;
 mod html_generator;
+mod crossword_eval;
 
 use crossword::Crossword;
 use entry::Entry;
@@ -22,11 +23,31 @@ fn main() {
 
     let entries = entries_apiresult.unwrap();
 
-    let crossword = Crossword::generate(10, 10, entries, & mut DefaultRandomProvider::new());
+    // generate 5 solutions and keep only the best one
+    let mut best_crossword: Option<Crossword> = None;
+    let mut best_score: f32 = 0.0;
 
-    crossword_printer::print(&crossword);
+    for _ in 0..5 {
+        let crossword = Crossword::generate(10, 10, entries.clone(), & mut DefaultRandomProvider::new());
 
-    let _ = fs::write("output/index.html", html_generator::generate_crossword_html(&crossword));
+        let score = crossword_eval::get_crossword_fitness(&crossword);
+
+        println!("Score: {}", score);
+
+        if score > best_score {
+            best_score = score;
+            best_crossword = Some(crossword);
+        }
+    }
+    
+    if let Some(best) = &best_crossword {
+        crossword_printer::print(&best);
+
+        let _ = fs::write("output/index.html", html_generator::generate_crossword_html(&best));
+    }
+    else {
+        println!("No crossword could be generated, end");
+    }
 }
 
 fn get_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {

@@ -22,10 +22,17 @@ pub enum ClueDirection {
     Vertical
 }
 
-struct Cell {
+pub struct Cell {
     pos_x: i32,
     pos_y: i32,
-    value: CellValue
+    value: CellValue,
+    clues: Vec<u32>,
+}
+
+impl Cell {
+    pub fn get_clue_belonging_count(&self) -> usize {
+        self.clues.len()
+    }
 }
 
 pub struct Clue {
@@ -269,8 +276,8 @@ impl Crossword
         }
         else {
             match direction {
-                ClueDirection::Horizontal => self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueStart(ClueStartCell::Horizontal(clue_id))}),
-                ClueDirection::Vertical => self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueStart(ClueStartCell::Vertical(clue_id))})
+                ClueDirection::Horizontal => self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueStart(ClueStartCell::Horizontal(clue_id)), clues: vec![]}),
+                ClueDirection::Vertical => self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueStart(ClueStartCell::Vertical(clue_id)), clues: vec![]})
             };
         }
 
@@ -282,10 +289,14 @@ impl Crossword
 
         while counter < entry.key_len() {
 
-            match self.get_cell_at(x, y) {
-                None => { self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::Normal(entry.get_key_at(counter).unwrap())}); }
+            match self.get_mut_cell_at(x, y) {
+                None => { self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::Normal(entry.get_key_at(counter).unwrap()), clues: vec![clue_id]}); }
                 Some(w) => match w.value {
-                    CellValue::Normal(w) => assert!(Some(w) == entry.get_key_at(counter)),
+                    CellValue::Normal(ww) => 
+                    {
+                        assert!(Some(ww) == entry.get_key_at(counter));
+                        w.clues.push(clue_id);
+                    }
                     CellValue::ClueEnd() => panic!("Should never happen, bug in try_fit logic"),
                     CellValue::ClueStart(_) => panic!("Should never happen, bug in try_fit logic")
                 }
@@ -298,7 +309,7 @@ impl Crossword
 
         // Add a ClueEnd cell at the end of the clue, but only if it is not already a ClueStart or ClueEnd
         match self.get_cell_at(x, y) {
-            None => {self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueEnd()})},
+            None => {self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueEnd(), clues: vec![]})},
             Some(w) => match w.value {
                 CellValue::ClueEnd() => {}, // It is OK to share a ClueEnd cell between two clues, so do nothing
                 CellValue::ClueStart(_) => {}, // It is OK to end with a ClueStart cell, so do nothing
@@ -363,7 +374,7 @@ impl Crossword
         }
     }
 
-    pub fn get_clues(&self) -> impl Iterator<Item = &Clue> + '_ {
+    pub fn get_clues(&self) -> impl Iterator<Item = &Clue> {
         self.clues.iter()
     }
 
@@ -379,7 +390,11 @@ impl Crossword
         no_cols as u8
     }
 
-    pub fn get_incrementors_for_direction(direction: ClueDirection) -> (fn(i32)->i32, fn(i32)->i32) {
+    pub fn get_cells(&self) -> impl Iterator<Item = &Cell> {
+        self.elements.iter()
+    }
+
+    fn get_incrementors_for_direction(direction: ClueDirection) -> (fn(i32)->i32, fn(i32)->i32) {
         match direction {
             ClueDirection::Horizontal => (|w| w + 1, |w| w),
             ClueDirection::Vertical => (|w| w, |w| w + 1)
@@ -392,6 +407,28 @@ mod tests {
     use crate::random_provider::FakeRandomProvider;
 
     use super::*;
+
+    #[test]
+    fn common_cell_belongs_to_two_clues()
+    {
+        let entries = [
+            Entry::new("abc".to_string(), "abc".to_string()),
+            Entry::new("ade".to_string(), "ade".to_string()),
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        crate::crossword_printer::print(&crossword);
+
+        assert!(crossword.get_clues().count() == 2);
+
+        assert!(crossword.elements.iter().filter(|w| w.clues.len() == 2).count() == 1);
+        assert!(crossword.elements.iter().filter(|w| w.clues.len() == 1).count() == 4);
+        assert!(crossword.elements.iter().filter(|w| w.clues.len() == 0).count() == 4);
+
+        assert!(crossword.elements.iter().filter(|w| matches!(w.value, CellValue::ClueStart(_))).all(|w| w.clues.len() == 0));
+        assert!(crossword.elements.iter().filter(|w| matches!(w.value, CellValue::ClueEnd())).all(|w| w.clues.len() == 0));
+    }
 
     #[test]
     fn end_cell_can_be_shared()
