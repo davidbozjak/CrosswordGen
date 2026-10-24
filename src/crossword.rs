@@ -484,7 +484,7 @@ mod tests {
 
         let clues = crossword.get_clues().collect::<Vec<&Clue>>();
         assert!(clues.iter().count() == 4);
-        assert!(clues.iter().all(|w| w.id >= 1 && w.id <= 3));   //the ID 5 is double
+        assert!(clues.iter().all(|w| w.id >= 1 && w.id <= 3));   //the ID 2 is double
 
         let cellvalue = crossword.get_cellvalue_at(2, -1);
         assert!((cellvalue.is_some()));
