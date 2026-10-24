@@ -135,16 +135,14 @@ impl Crossword
 
         let mut has_intersection = false;
 
-        // first needs to be empty
+        // first cell can be either empty, or a clue start of the oppotite direction, or a clue end
         let first = self.get_cell_at(x, y);
         x = x_incrementor(x);
         y = y_incrementor(y);
 
         if let Some(first) = first {
-            // Future improvement
-            // Clue_End -> replace clue end with new clue start
             match first.value {
-                CellValue::ClueEnd() => return false,
+                CellValue::ClueEnd() => {},
                 CellValue::Normal(_) => return false,
                 CellValue::ClueStart(start_value) => {
                     // return false if it is the same direction or if it's already both. If it's oposite then continue
@@ -239,8 +237,15 @@ impl Crossword
 
         if let Some(first) = first {
             match first.value {
-                CellValue::ClueEnd() => panic!("Not supporting replacing end with start (yet)"),
                 CellValue::Normal(_) => panic!("Should never happen, bug in try_fit logic"),
+                CellValue::ClueEnd() => 
+                {
+                    // simply replace ClueEnd with ClueStart of the new clue
+                    match direction {
+                        ClueDirection::Horizontal => first.value = CellValue::ClueStart(ClueStartCell::Horizontal(clue_id)),
+                        ClueDirection::Vertical => first.value = CellValue::ClueStart(ClueStartCell::Vertical(clue_id))
+                    };
+                },
                 CellValue::ClueStart(start_value) => {
                     match direction
                     {
@@ -415,7 +420,27 @@ mod tests {
         //crate::crossword_printer::print(&crossword);
 
         assert!(crossword.get_clues().count() == 4);
-        assert!(crossword.elements.iter().filter(|w| w.value == CellValue::ClueEnd()).count() == 3);    // one ClueEnd is sahred between clues 1 and 4
+        assert!(crossword.elements.iter().filter(|w| matches!(w.value, CellValue::ClueEnd())).count() == 3);    // one ClueEnd is sahred between clues 1 and 4
+    }
+
+    #[test]
+    fn end_cell_can_made_into_start_cell()
+    {
+        let entries = [
+            Entry::new("abc".to_string(), "abc".to_string()),
+            Entry::new("dbef".to_string(), "dbef".to_string()),
+            Entry::new("fghij".to_string(), "fghij".to_string()),
+            Entry::new("khlmn".to_string(), "khlmn".to_string()),
+
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        //crate::crossword_printer::print(&crossword);
+
+        assert!(crossword.get_clues().count() == 4);
+        assert!(crossword.elements.iter().filter(|w| matches!(w.value, CellValue::ClueStart(_))).count() == 4);
+        assert!(crossword.elements.iter().filter(|w| matches!(w.value, CellValue::ClueEnd())).count() == 3);    // one ClueEnd gets replaced by clueStar
     }
 
     #[test]
