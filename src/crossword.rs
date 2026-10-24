@@ -168,19 +168,13 @@ impl Crossword
         }
 
         while counter < entry.key_len() {
-            let element_at_pos = self.get_cell_at(x, y);
 
-            if element_at_pos.is_some() {
-                match element_at_pos.unwrap().value {
-                    CellValue::ClueStart(_) => 
-                    {
-                        return false;
-                    },
-                    CellValue::ClueEnd() => {
-                        return false;
-                    }
-                    CellValue::Normal(character) =>
-                    {
+            match self.get_cell_at(x, y) {
+                None => {},
+                Some(w) => match w.value {
+                    CellValue::ClueStart(_) => return false,
+                    CellValue::ClueEnd() => return false,
+                    CellValue::Normal(character) => {
                         if Some(character) == entry.get_key_at(counter) {
                             has_intersection = true;
                         }
@@ -287,17 +281,14 @@ impl Crossword
         y = y_incrementor(y);
 
         while counter < entry.key_len() {
-            let element_at_pos = self.get_cell_at(x, y);
 
-            if element_at_pos.is_none() {
-                self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::Normal(entry.get_key_at(counter).unwrap())});
-            }
-            else {
-                match element_at_pos.unwrap().value {
+            match self.get_cell_at(x, y) {
+                None => { self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::Normal(entry.get_key_at(counter).unwrap())}); }
+                Some(w) => match w.value {
                     CellValue::Normal(w) => assert!(Some(w) == entry.get_key_at(counter)),
-                    CellValue::ClueEnd() => {},
-                    CellValue::ClueStart(_) => panic!("Should never happen, bug in try_fit logic"),
-                };
+                    CellValue::ClueEnd() => panic!("Should never happen, bug in try_fit logic"),
+                    CellValue::ClueStart(_) => panic!("Should never happen, bug in try_fit logic")
+                }
             }
 
             x = x_incrementor(x);
@@ -305,17 +296,14 @@ impl Crossword
             counter += 1;
         }
 
-        let last = self.get_cell_at(x, y);
-
-        if last.is_none() {
-            self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueEnd()});
-        }
-        else {
-            match last.unwrap().value {
+        // Add a ClueEnd cell at the end of the clue, but only if it is not already a ClueStart or ClueEnd
+        match self.get_cell_at(x, y) {
+            None => {self.elements.push(Cell {pos_x: x, pos_y: y, value: CellValue::ClueEnd()})},
+            Some(w) => match w.value {
+                CellValue::ClueEnd() => {}, // It is OK to share a ClueEnd cell between two clues, so do nothing
+                CellValue::ClueStart(_) => {}, // It is OK to end with a ClueStart cell, so do nothing
                 CellValue::Normal(_) => panic!("Should never happen, bug in try_fit logic"),
-                CellValue::ClueEnd() => {}, // it is OK and expected that clue end can be shared
-                CellValue::ClueStart(_) => panic!("Should never happen, bug in try_fit logic"),
-            };
+            }
         }
     }
 
@@ -421,6 +409,24 @@ mod tests {
 
         assert!(crossword.get_clues().count() == 4);
         assert!(crossword.elements.iter().filter(|w| matches!(w.value, CellValue::ClueEnd())).count() == 3);    // one ClueEnd is sahred between clues 1 and 4
+    }
+
+    #[test]
+    fn clue_can_end_with_a_clue_start_cell()
+    {
+        let entries = [
+            Entry::new("abc".to_string(), "abc".to_string()),
+            Entry::new("dcef".to_string(), "dcef".to_string()),
+            Entry::new("fghi".to_string(), "fghi".to_string()),
+            Entry::new("jkbl".to_string(), "jkbl".to_string()),
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        //crate::crossword_printer::print(&crossword);
+
+        assert!(crossword.get_clues().count() == 4);
+        assert!(crossword.elements.iter().filter(|w| matches!(w.value, CellValue::ClueEnd())).count() == 3);    // jkbl clue ends with a ClueStart cell, therefore only 3
     }
 
     #[test]
