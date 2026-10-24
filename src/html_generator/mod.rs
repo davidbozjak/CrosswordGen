@@ -183,15 +183,15 @@ document.getElementById("validateBtn").addEventListener("click", () => {{
         const c = input.dataset.col;
         const correct = crossword.solution[r][c].toUpperCase();
 
-        if (input.value != "") {
-            if (input.value.toUpperCase() === correct) {
+        if (input.value != "") {{
+            if (input.value.toUpperCase() === correct) {{
                 input.classList.remove("incorrect");
                 input.classList.add("correct");
-            } else {
+            }} else {{
                 input.classList.remove("correct");
                 input.classList.add("incorrect");
-            }
-        }
+            }}
+        }}
     }});
 }});
 
