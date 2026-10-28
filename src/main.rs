@@ -44,12 +44,12 @@ fn main() {
     if let Some(best) = &best_crossword {
         crossword_printer::print(&best);
 
-        let _ = fs::write("output/index.html", html_generator::generate_crossword_html(&best));
+        let _ = fs::write("output/index.html", html_generator::generate_crossword_html(&best) + "\n");
 
         let missing_words = crossword_eval::get_missing_words(&best);
         println!("Missing words: {:?}", missing_words);
 
-        let _ = fs::write("output/missing_words.txt", missing_words.join("\n"));
+        let _ = fs::write("output/missing_words.txt", missing_words.join("\n") + "\n");
     }
     else {
         println!("No crossword could be generated, end");
