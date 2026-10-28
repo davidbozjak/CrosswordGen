@@ -107,10 +107,10 @@ r#"
 
 <button id="validateBtn">Validate</button>
 
-<div id="clues">
-    <h3>Horizotnal</h3>
+<div id="Ledtrådar">
+    <h3>Vågrätt</h3>
     <ul id="horizontalClueList"></ul>
-    <h3>Vertical</h3>
+    <h3>Lodrätt</h3>
     <ul id="verticalClueList"></ul>
 </div>
 
@@ -285,13 +285,16 @@ fn generate_clues_str(crossword: &Crossword) -> String
 
     let mut output:String = String::from("horizontalClues: [\n");
 
-    for clue in crossword.get_clues().filter(|w| w.direction == ClueDirection::Horizontal) {
+    let mut sorted_clues: Vec<_> = crossword.get_clues().collect();
+    sorted_clues.sort_by_key(|w| w.id);
+
+    for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Horizontal) {
         output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.id, clue.text).as_str());
     }
 
     output.push_str("],  \nverticalClues: [\n");
 
-    for clue in crossword.get_clues().filter(|w|w.direction == ClueDirection::Vertical) {
+    for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Vertical) {
         output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.id, clue.text).as_str());
     }
 
