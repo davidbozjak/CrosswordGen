@@ -4,6 +4,7 @@ mod random_provider;
 mod crossword_printer;
 mod html_generator;
 mod crossword_eval;
+mod helpers;
 
 use crossword::Crossword;
 use entry::Entry;
@@ -44,6 +45,11 @@ fn main() {
         crossword_printer::print(&best);
 
         let _ = fs::write("output/index.html", html_generator::generate_crossword_html(&best));
+
+        let missing_words = crossword_eval::get_missing_words(&best);
+        println!("Missing words: {:?}", missing_words);
+
+        let _ = fs::write("output/missing_words.txt", missing_words.join("\n"));
     }
     else {
         println!("No crossword could be generated, end");

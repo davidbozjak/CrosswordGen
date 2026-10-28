@@ -1,5 +1,6 @@
 use crate::entry::Entry;
 use crate::random_provider::RandomProvider;
+use crate::helpers;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ClueStartCell
@@ -134,7 +135,7 @@ impl Crossword
 
     fn try_fit(&self, entry: &Entry, start_x: i32, start_y: i32, direction: ClueDirection) -> bool
     {
-        let (x_incrementor, y_incrementor) = Crossword::get_incrementors_for_direction(direction);
+        let (x_incrementor, y_incrementor) = helpers::get_incrementors_for_direction(direction);
 
         let mut counter:usize = 0;
         let mut x = start_x;
@@ -225,7 +226,7 @@ impl Crossword
 
     fn insert_entry(&mut self, entry: &Entry, start_x: i32, start_y: i32, direction: ClueDirection)
     {
-        let (x_incrementor, y_incrementor) = Crossword::get_incrementors_for_direction(direction);
+        let (x_incrementor, y_incrementor) = helpers::get_incrementors_for_direction(direction);
 
         // assign the preliminary id, but it might change. We will want to insert either way but it could be that we are intersecting with an existing clue and we will want to use that id instead of creating a new one
         let mut clue_id = self.clues.iter().count() as u32 + 1;
@@ -392,13 +393,6 @@ impl Crossword
 
     pub fn get_cells(&self) -> impl Iterator<Item = &Cell> {
         self.elements.iter()
-    }
-
-    fn get_incrementors_for_direction(direction: ClueDirection) -> (fn(i32)->i32, fn(i32)->i32) {
-        match direction {
-            ClueDirection::Horizontal => (|w| w + 1, |w| w),
-            ClueDirection::Vertical => (|w| w, |w| w + 1)
-        }
     }
 }
 
