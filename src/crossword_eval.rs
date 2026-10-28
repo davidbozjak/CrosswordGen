@@ -18,22 +18,37 @@ pub fn get_missing_words(crossword: &Crossword) -> Vec<String> {
     
     for x in crossword.min_x()..crossword.max_x() {
         for y in crossword.min_y()..crossword.max_y() {
+            
+            let mut try_horizontal:bool = false;
+            let mut try_vertical:bool = false;
+            
             let cell = crossword.get_cellvalue_at(x, y);
 
-            if let Some(c) = cell {
-                continue;
+            match cell {
+                Some(crate::crossword::CellValue::Normal(_)) => {},
+                Some(crate::crossword::CellValue::ClueStart(w)) => match w {
+                    crate::crossword::ClueStartCell::Horizontal(_) => { try_vertical = true; },
+                    crate::crossword::ClueStartCell::Vertical(_) => { try_horizontal = true; },
+                    crate::crossword::ClueStartCell::HorizontalVertical(_) => {},
+                },
+                Some(crate::crossword::CellValue::ClueEnd()) => { try_horizontal = true; try_vertical = true; },
+                None => { try_horizontal = true; try_vertical = true; }
             }
 
-            let horizontal_str = get_word_from_cell(crossword, x, y, ClueDirection::Horizontal);
+            if try_horizontal {
+                let horizontal_str = get_word_from_cell(crossword, x, y, ClueDirection::Horizontal);
 
-            if horizontal_str.len() > 0 {
-                missing_words.push(horizontal_str);
+                if horizontal_str.len() > 0 {
+                    missing_words.push(horizontal_str);
+                }
             }
 
-            let vertical_str = get_word_from_cell(crossword, x, y, ClueDirection::Vertical);
+            if try_vertical {
+                let vertical_str = get_word_from_cell(crossword, x, y, ClueDirection::Vertical);
 
-            if vertical_str.len() > 0 {
-                missing_words.push(vertical_str);
+                if vertical_str.len() > 0 {
+                    missing_words.push(vertical_str);
+                }
             }
         }
     }
