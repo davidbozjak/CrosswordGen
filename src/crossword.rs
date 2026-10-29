@@ -75,15 +75,30 @@ impl Crossword
         crossword.insert_entry(&first, 0, 0, ClueDirection::Horizontal);
 
         let mut entries_working_copy: Vec<Entry> = entries.into_iter().collect();
-        // algoritm pseudocode:
+        
         while entries_working_copy.len() > 0 {
 
-            let next_i = random_provider.next_u32() as usize % entries_working_copy.len();
-            let next = entries_working_copy[next_i].clone();
-            entries_working_copy.remove(next_i);
-            
-            crossword.try_add_entry(&next);
+            let mut avaliable_indexes = (0..entries_working_copy.len()).collect::<Vec<_>>();
+            let mut inserted:bool = false;
 
+            while avaliable_indexes.len() > 0 {
+
+                let r_index = random_provider.next_u32() as usize % avaliable_indexes.len();
+                let next_i = avaliable_indexes[r_index];
+                avaliable_indexes.remove(r_index);
+
+                let next = entries_working_copy[next_i].clone();
+                
+                if crossword.try_add_entry(&next) {
+                    entries_working_copy.remove(next_i);
+                    inserted = true;
+                    break;
+                }    
+            }
+
+            if !inserted {
+                break;
+            }
         }
 
         return crossword;
