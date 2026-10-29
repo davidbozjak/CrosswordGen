@@ -97,6 +97,7 @@ impl Crossword
             }
 
             if !inserted {
+                // tried inserting all remaining clues (regardless of order), none fit - nothing more to do
                 break;
             }
         }
@@ -416,6 +417,25 @@ mod tests {
     use crate::random_provider::FakeRandomProvider;
 
     use super::*;
+
+    #[test]
+    fn clue_picked_second()
+    {
+        // tests that a clue that doesn't fit first time it is picked ("e") gets reused later.
+        // seems obvious now but first version of the crossword creation algorithm didn't work that way and this test failed - only clue 1 and 3 were added.
+
+        let entries = [
+            Entry::new("abc".to_string(), "abc".to_string()),
+            Entry::new("e".to_string(), "e".to_string()),
+            Entry::new("dce".to_string(), "dce".to_string()),
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        crate::crossword_printer::print(&crossword);
+
+        assert!(crossword.get_clues().count() == 3);
+    }
 
     #[test]
     fn common_cell_belongs_to_two_clues()
