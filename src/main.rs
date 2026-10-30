@@ -5,8 +5,10 @@ mod crossword_printer;
 mod html_generator;
 mod crossword_eval;
 mod helpers;
+mod config;
 
 use crossword::Crossword;
+use config::Config;
 use entry::Entry;
 use random_provider::DefaultRandomProvider;
 use std::fs;
@@ -14,7 +16,9 @@ use std::fs;
 use reqwest::blocking::get;
 
 fn main() {
-    let entries_apiresult = get_data();
+    let config = Config::load();
+
+    let entries_apiresult = get_data(&config);
 
     if entries_apiresult.is_err()
     {
@@ -56,8 +60,8 @@ fn main() {
     }
 }
 
-fn get_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
-    let mut fetch_from_api: bool = false;
+fn get_data(config:&Config) -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
+    let mut fetch_from_api: bool = true;
 
     #[cfg(not(debug_assertions))]
     {
@@ -65,7 +69,7 @@ fn get_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
     }
 
     if fetch_from_api {
-        get_api_data()
+        get_api_data(&config)
     }
     else {
         let entries = [
@@ -83,8 +87,8 @@ fn get_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
     }
 }
 
-fn get_api_data() -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
-    let results: Vec<Entry> = get("https://sheetdb.io/api/v1/2ugi4z3mi964f")?.json()?;
+fn get_api_data(config:&Config) -> Result<Vec<Entry>, Box<dyn std::error::Error>> {
+    let results: Vec<Entry> = get(&config.clue_get_api)?.json()?;
 
     let entries:Vec<Entry> = results.into_iter().map(Entry::from).collect();
 
