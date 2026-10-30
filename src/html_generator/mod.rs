@@ -15,54 +15,111 @@ r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily SE Mini {date}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Daily SE Mini {date}</title>
 
-<style>
-    body {{
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        max-width: 600px;
-        margin: auto;
+    <style>
+    :root {{
+        --grid-size: min(90vw, 520px);
+        --cell-size: calc(var(--grid-size) / 10);
+
+        --radius: 12px;
+
+        --blue: #2563eb;
+        --blue-dark: #1d4ed8;
+        --blue-light: #dbeafe;
+
+        --border: #cbd5e1;
+        --text: #1e293b;
+        --text-secondary: #64748b;
+
+        --success: #0cff0c1a;
+        --error: #fee2e2;
     }}
 
+    body {{
+        font-family:
+            Inter,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            sans-serif;
+
+        background: #f8fafc;
+        color: var(--text);
+
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px 16px;
+
+        line-height: 1.5;
+    }}
+
+    h2 {{
+        text-align: center;
+        margin-bottom: 24px;
+        font-size: clamp(1.5rem, 5vw, 2rem);
+    }}
+
+    h3 {{
+        margin-top: 1.5rem;
+    }}
+
+    /* Crossword */
+
     #grid {{
+        --cell-size: calc(min(90vw, 520px) / var(--cols));
+
         display: grid;
-        grid-template-columns: repeat({no_cols}, 40px);
-        gap: 4px;
-        justify-content: center;
+        grid-template-columns: repeat(var(--cols), var(--cell-size));
+
+        width: max-content;
+        margin: 0 auto;
+
+        padding: 6px;
+        gap: 2px;
+
+        background: var(--border);
+        border-radius: var(--radius);
     }}
 
     .cell {{
-        width: 40px;
-        height: 40px;
-        border: 1px solid #aaa;
-        text-align: center;
-        font-size: 22px;
+        aspect-ratio: 1;
+
+        background: white;
+        border: 1px solid var(--border);
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
         position: relative;
+        box-sizing: border-box;
     }}
 
     .cell input {{
-        width: 90%;
-        height: 90%;
+        width: 100%;
+        height: 100%;
+
         border: none;
+        outline: none;
+
+        background: transparent;
+
         text-align: center;
-        font-size: 22px;
+        text-transform: uppercase;
+
+        font-size: clamp(16px, 4vw, 26px);
+        font-weight: 600;
     }}
 
-    .clueBox {{
-        width: 40px;
-        height: 40px;
-        background: #e0e0e0;
-        font-size: 16px;
-        display: flex;
-        align-items: center;   /* vertical centering */
-        justify-content: center; /* horizontal centering */
-        position: absolute;
-        top: 0;
-        left: 0;
-        border-bottom-right-radius: 6px;
+    .clue-cell {{
+        background: var(--blue-light);
+        color: #1e3a8a;
+
+        font-size: clamp(14px, 3vw, 22px);
+        font-weight: 700;
     }}
 
     .transparent {{
@@ -70,48 +127,111 @@ r#"
         border: none;
     }}
 
+    .cell input.correct {{
+        background: var(--success);
+    }}
+
+    .cell input.incorrect {{
+        background: var(--error);
+    }}
+
+    /* Clues */
+
+    #Ledtrådar {{
+        margin-top: 32px;
+        padding: 20px;
+
+        background: white;
+        border-radius: var(--radius);
+
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+    }}
+
+    #Ledtrådar ul {{
+        padding-left: 20px;
+    }}
+
+    #Ledtrådar li {{
+        margin-bottom: 8px;
+    }}
+
+    /* Buttons */
+
+    #validateBtn,
+    .toggle-button,
+    .submit-button {{
+        border: none;
+        cursor: pointer;
+
+        transition:
+            background .2s ease,
+            transform .15s ease;
+    }}
+
+    #validateBtn:hover,
+    .toggle-button:hover,
+    .submit-button:hover {{
+        transform: translateY(-1px);
+    }}
+
+    #validateBtn:active,
+    .toggle-button:active,
+    .submit-button:active {{
+        transform: translateY(0);
+    }}
+
     #validateBtn {{
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 18px;
+        display: block;
+
+        margin: 24px auto;
+        padding: 12px 24px;
+
+        background: var(--blue);
+        color: white;
+
+        border-radius: 10px;
+
+        font-size: 16px;
+        font-weight: 600;
     }}
 
-    .correct {{
-        background-color: #cce6ff !important; /* light blue */
+    .toggle-button,
+    .submit-button {{
+        background: var(--blue);
+        color: white;
     }}
 
-    .incorrect {{
-        background-color: #ffcccc !important; /* light red */
+    .toggle-button:hover,
+    .submit-button:hover {{
+        background: var(--blue-dark);
     }}
 
-    #clues {{
-        margin-top: 30px;
+    .submit-button {{
+        flex-shrink: 0;
+
+        padding: 8px 14px;
+
+        border-radius: 6px;
+        font-weight: 600;
     }}
 
-    @media (max-width: 480px) {{
-        #grid {{
-            grid-template-columns: repeat({no_rows}, 32px);
-        }}
-        .cell {{
-            width: 32px;
-            height: 32px;
-        }}
-        .cell input {{
-            font-size: 18px;
-        }}
+    .submit-button:disabled {{
+        background: #94a3b8;
+        cursor: not-allowed;
     }}
+
+    /* Accessibility */
+
+    input:focus,
+    button:focus-visible {{
+        outline: 3px solid #60a5fa;
+        outline-offset: 2px;
+    }}
+
+    /* AI Section */
 
     .toolbar {{
         margin-bottom: 12px;
-    }}
-
-    .toggle-button {{
-        background: #475569;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 16px;
-        cursor: pointer;
     }}
 
     .component-list {{
@@ -121,9 +241,12 @@ r#"
 
         overflow: hidden;
 
+        max-height: 1000px;
+        opacity: 1;
+
         transition:
-            max-height 0.3s ease,
-            opacity 0.3s ease;
+            max-height .3s ease,
+            opacity .3s ease;
     }}
 
     .component-list.collapsed {{
@@ -131,60 +254,33 @@ r#"
         opacity: 0;
     }}
 
-    .component-list:not(.collapsed) {{
-        max-height: 1000px;
-        opacity: 1;
-    }}
-
     .submit-component {{
         display: flex;
-        align-items: center;
-        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 12px;
 
-        padding: 10px 16px;
+        padding: 14px;
 
         background: white;
+
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: var(--radius);
+
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
     }}
 
     .submit-content {{
-        flex: 1;
-        min-width: 0;
+        flex: 1 1 250px;
 
-        color: #334155;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }}
 
     .secondary {{
-        color: #64748b;
+        color: var(--text-secondary);
     }}
-
-    .submit-button {{
-        flex-shrink: 0;
-
-        background: #2563eb;
-        color: white;
-
-        border: none;
-        border-radius: 6px;
-
-        padding: 8px 14px;
-        font-weight: 600;
-        cursor: pointer;
-    }}
-
-    .submit-button:hover {{
-        background: #1d4ed8;
-    }}
-
-    .submit-button:disabled {{
-        background: #94a3b8;
-        cursor: not-allowed;
-    }}
-</style>
+    </style>
 </head>
 <body>
 
@@ -225,6 +321,7 @@ r#"
 // Build the grid
 // ------------------------------
 const grid = document.getElementById("grid");
+grid.style.setProperty("--cols", {no_cols});
 
 for (let r = 0; r < crossword.rows; r++) {{
     for (let c = 0; c < crossword.cols; c++) {{
@@ -237,10 +334,8 @@ for (let r = 0; r < crossword.rows; r++) {{
             cell.classList.add("transparent");
         }}
         else if (isNumber(sol_content)) {{
-            const clueBox = document.createElement("div");
-            clueBox.classList.add("clueBox");
-            clueBox.textContent = sol_content;
-            cell.appendChild(clueBox);
+            cell.classList.add("clue-cell");
+            cell.textContent = sol_content;
         }} else {{
             const input = document.createElement("input");
             input.maxLength = 1;
@@ -388,7 +483,6 @@ function isNumber(str){{
 "#,
     date = date_str,
     no_cols = crossword.get_no_cols(),
-    no_rows = crossword.get_no_rows(),
     solution_definition = generate_solutions_str(crossword),
     clue_definition = generate_clues_str(crossword),
     ai_gen_clues = generate_ai_clues(ai_gen_clues),
