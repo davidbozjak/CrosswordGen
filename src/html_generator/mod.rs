@@ -2,9 +2,12 @@ use crate::crossword::Crossword;
 use crate::crossword::CellValue;
 use crate::crossword::ClueDirection;
 use crate::crossword::ClueStartCell;
+use crate::Entry;
+use crate::config::Config;
+
 use chrono;
 
-pub fn generate_crossword_html(crossword: &Crossword) -> String {
+pub fn generate_crossword_html(crossword: &Crossword, ai_gen_clues: &Vec<Entry>, config: &Config) -> String {
     let date_str = chrono::Local::now().date_naive().checked_add_days(chrono::Days::new(1)).expect("REASON").format("%A, %Y-%m-%d").to_string();
     
     let output = format!(
@@ -97,6 +100,90 @@ r#"
             font-size: 18px;
         }}
     }}
+
+    .toolbar {{
+        margin-bottom: 12px;
+    }}
+
+    .toggle-button {{
+        background: #475569;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        cursor: pointer;
+    }}
+
+    .component-list {{
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        overflow: hidden;
+
+        transition:
+            max-height 0.3s ease,
+            opacity 0.3s ease;
+    }}
+
+    .component-list.collapsed {{
+        max-height: 0;
+        opacity: 0;
+    }}
+
+    .component-list:not(.collapsed) {{
+        max-height: 1000px;
+        opacity: 1;
+    }}
+
+    .submit-component {{
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        padding: 10px 16px;
+
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+    }}
+
+    .submit-content {{
+        flex: 1;
+        min-width: 0;
+
+        color: #334155;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }}
+
+    .secondary {{
+        color: #64748b;
+    }}
+
+    .submit-button {{
+        flex-shrink: 0;
+
+        background: #2563eb;
+        color: white;
+
+        border: none;
+        border-radius: 6px;
+
+        padding: 8px 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }}
+
+    .submit-button:hover {{
+        background: #1d4ed8;
+    }}
+
+    .submit-button:disabled {{
+        background: #94a3b8;
+        cursor: not-allowed;
+    }}
 </style>
 </head>
 <body>
@@ -114,14 +201,25 @@ r#"
     <ul id="verticalClueList"></ul>
 </div>
 
+<div class="toolbar">
+    <button id="toggleButton" class="toggle-button">
+        Show AI Generated Clues
+    </button>
+</div>
+
+<div id="aiGenClueList" class="component-list collapsed"></div>
+
 <script>
 // ------------------------------
 // Crossword Data Structure
 // ------------------------------
-const crossword = {{
-{solution_definition},
-{clue_definition}
-}};
+    const crossword = {{
+        {solution_definition},
+        {clue_definition},
+        {ai_gen_clues}
+    }};
+
+    let isAIGenSectionExpanded = false;
 
 // ------------------------------
 // Build the grid
@@ -173,6 +271,90 @@ crossword.verticalClues.forEach(cl => {{
 }});
 
 // ------------------------------
+// AI Generated Clues section
+// ------------------------------
+
+    const container = document.getElementById("aiGenClueList");
+    const toggleButton = document.getElementById("toggleButton");
+
+    function renderItems() {{
+        container.innerHTML = "";
+
+        crossword.ai_gen_clues.forEach(item => {{
+            const component = document.createElement("div");
+
+            component.className = "submit-component";
+
+            component.innerHTML = `
+                <div class="submit-content">
+                    <b>${{item.key}}:</b>
+                    ${{item.clue}}
+                    <span class="secondary">(${{item.confidence}})</span>
+                </div>
+
+                <button
+                    class="submit-button"
+                    type="submit">
+                    Godkänn
+                </button>
+            `;
+
+            const button = component.querySelector(".submit-button");
+
+            button.addEventListener("click", () => {{
+                submitClueToDB(button, item);
+            }});
+
+            container.appendChild(component);
+        }});
+    }}
+
+    function updateExpandedState() {{
+        container.classList.toggle("collapsed", !isAIGenSectionExpanded);
+
+        toggleButton.textContent =
+            isAIGenSectionExpanded ? "Stäng": "Visa AI genererade ledtrådar";
+    }}
+
+    toggleButton.addEventListener("click", () => {{
+        isAIGenSectionExpanded = !isAIGenSectionExpanded;
+        updateExpandedState();
+    }});
+
+    async function submitClueToDB(button, item) {{
+        try {{
+            button.disabled = true;
+            button.textContent = "...";
+
+            const response = await fetch("{db_url}", {{
+                method: "POST",
+                headers: {{
+                    "Content-Type": "application/json"
+                }},
+                body: JSON.stringify({{
+                    key: item.key,
+                    clue: item.clue,
+                    aI_gen_confidence: item.confidence
+                }})
+            }});
+
+            if (!response.ok) {{
+                throw new Error("Request failed");
+            }}
+
+            button.textContent = "Inskickad";
+        }}
+        catch (error) {{
+            console.error(error);
+
+            button.textContent = "Err";
+        }}
+    }}
+
+    renderItems();
+    updateExpandedState();
+
+// ------------------------------
 // Validation logic
 // ------------------------------
 document.getElementById("validateBtn").addEventListener("click", () => {{
@@ -208,7 +390,9 @@ function isNumber(str){{
     no_cols = crossword.get_no_cols(),
     no_rows = crossword.get_no_rows(),
     solution_definition = generate_solutions_str(crossword),
-    clue_definition = generate_clues_str(crossword));
+    clue_definition = generate_clues_str(crossword),
+    ai_gen_clues = generate_ai_clues(ai_gen_clues),
+    db_url = &config.clue_get_api);
 
     return output;
 }
@@ -296,6 +480,40 @@ fn generate_clues_str(crossword: &Crossword) -> String
 
     for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Vertical) {
         output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.id, clue.text).as_str());
+    }
+
+    output.push_str("]");
+
+    return output;
+}
+
+fn generate_ai_clues(clues:&Vec<Entry>) -> String
+{
+    /*
+    Output expected to look like this:
+        ai_gen_clues = [
+            {{
+                key: "key1",
+                clue: "clue1",
+                confidence: 80,
+            }},
+            {{
+                key: "key2",
+                clue: "clue2",
+                confidence: 20,
+            }},
+            {{
+                key: "key3",
+                clue: "clue3",
+                confidence: 50,
+            }},
+        ];
+    */
+
+    let mut output:String = String::from("ai_gen_clues: [\n");
+
+    for clue in clues {
+        output.push_str(format!("{{ key: \"{}\", clue: \"{}\", confidence: \"{}\" }}, \n", clue.get_key(), clue.get_clue(), clue.get_confidence()).as_str());
     }
 
     output.push_str("]");

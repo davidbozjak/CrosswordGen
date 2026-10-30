@@ -105,7 +105,7 @@ impl Crossword
         return crossword;
     }
 
-    fn try_add_entry(&mut self, entry: &Entry) -> bool {
+    pub fn try_add_entry(&mut self, entry: &Entry) -> bool {
         if self.try_add_vertical(entry) { true } else { self.try_add_horizontal(entry) }
     }
 
@@ -425,9 +425,9 @@ mod tests {
         // seems obvious now but first version of the crossword creation algorithm didn't work that way and this test failed - only clue 1 and 3 were added.
 
         let entries = [
-            Entry::new("abc".to_string(), "abc".to_string()),
-            Entry::new("e".to_string(), "e".to_string()),
-            Entry::new("dce".to_string(), "dce".to_string()),
+            Entry::new("abc".to_string(), "abc".to_string(), None),
+            Entry::new("e".to_string(), "e".to_string(), None),
+            Entry::new("dce".to_string(), "dce".to_string(), None),
         ];
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
@@ -441,8 +441,8 @@ mod tests {
     fn common_cell_belongs_to_two_clues()
     {
         let entries = [
-            Entry::new("abc".to_string(), "abc".to_string()),
-            Entry::new("ade".to_string(), "ade".to_string()),
+            Entry::new("abc".to_string(), "abc".to_string(), None),
+            Entry::new("ade".to_string(), "ade".to_string(), None),
         ];
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
@@ -463,10 +463,10 @@ mod tests {
     fn end_cell_can_be_shared()
     {
         let entries = [
-            Entry::new("abc".to_string(), "abc".to_string()),
-            Entry::new("defb".to_string(), "defb".to_string()),
-            Entry::new("dghi".to_string(), "dghi".to_string()),
-            Entry::new("hjk".to_string(), "hjk".to_string()),
+            Entry::new("abc".to_string(), "abc".to_string(), None),
+            Entry::new("defb".to_string(), "defb".to_string(), None),
+            Entry::new("dghi".to_string(), "dghi".to_string(), None),
+            Entry::new("hjk".to_string(), "hjk".to_string(), None),
         ];
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
@@ -481,10 +481,10 @@ mod tests {
     fn clue_can_end_with_a_clue_start_cell()
     {
         let entries = [
-            Entry::new("abc".to_string(), "abc".to_string()),
-            Entry::new("dcef".to_string(), "dcef".to_string()),
-            Entry::new("fghi".to_string(), "fghi".to_string()),
-            Entry::new("jkbl".to_string(), "jkbl".to_string()),
+            Entry::new("abc".to_string(), "abc".to_string(), None),
+            Entry::new("dcef".to_string(), "dcef".to_string(), None),
+            Entry::new("fghi".to_string(), "fghi".to_string(), None),
+            Entry::new("jkbl".to_string(), "jkbl".to_string(), None),
         ];
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
@@ -499,10 +499,10 @@ mod tests {
     fn end_cell_can_made_into_start_cell()
     {
         let entries = [
-            Entry::new("abc".to_string(), "abc".to_string()),
-            Entry::new("dbef".to_string(), "dbef".to_string()),
-            Entry::new("fghij".to_string(), "fghij".to_string()),
-            Entry::new("khlmn".to_string(), "khlmn".to_string()),
+            Entry::new("abc".to_string(), "abc".to_string(), None),
+            Entry::new("dbef".to_string(), "dbef".to_string(), None),
+            Entry::new("fghij".to_string(), "fghij".to_string(), None),
+            Entry::new("khlmn".to_string(), "khlmn".to_string(), None),
 
         ];
 
@@ -519,12 +519,12 @@ mod tests {
     fn adds_horizontalvertical_clue_horizontalfirst()
     {
         let entries = [
-            Entry::new("abc".to_string(), "abc".to_string()),
-            Entry::new("cdef".to_string(), "cdef".to_string()),
-            Entry::new("dghi".to_string(), "dghi".to_string()),
-            Entry::new("jiklm".to_string(), "jiklm".to_string()),
-            Entry::new("jnop".to_string(), "jnop".to_string()),
-            Entry::new("hrs".to_string(), "hrs".to_string()),
+            Entry::new("abc".to_string(), "abc".to_string(), None),
+            Entry::new("cdef".to_string(), "cdef".to_string(), None),
+            Entry::new("dghi".to_string(), "dghi".to_string(), None),
+            Entry::new("jiklm".to_string(), "jiklm".to_string(), None),
+            Entry::new("jnop".to_string(), "jnop".to_string(), None),
+            Entry::new("hrs".to_string(), "hrs".to_string(), None),
         ];
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
@@ -544,10 +544,10 @@ mod tests {
     fn adds_horizontalvertical_clue_verticalfirst()
     {
         let entries = [
-            Entry::new("abcd".to_string(), "abcd".to_string()),
-            Entry::new("bef".to_string(), "bef".to_string()),
-            Entry::new("gdhi".to_string(), "gdhi".to_string()),
-            Entry::new("jgkl".to_string(), "jgkl".to_string()),
+            Entry::new("abcd".to_string(), "abcd".to_string(), None),
+            Entry::new("bef".to_string(), "bef".to_string(), None),
+            Entry::new("gdhi".to_string(), "gdhi".to_string(), None),
+            Entry::new("jgkl".to_string(), "jgkl".to_string(), None),
         ];
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));

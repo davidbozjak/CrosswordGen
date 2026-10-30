@@ -4,12 +4,13 @@ use serde::Deserialize;
 pub struct Entry {
     key: String,
     clue: String,
+    ai_gen_confidence: Option<u32>
 }
 
 impl Entry {
         
-    pub fn new(key: String, clue: String) -> Entry {
-        Self {key: key, clue: clue}
+    pub fn new(key: String, clue: String, ai_gen_confidence: Option<u32>) -> Entry {
+        Self {key: key, clue: clue, ai_gen_confidence:ai_gen_confidence}
     }
 
     pub fn get_key(&self) -> &str {
@@ -39,6 +40,13 @@ impl Entry {
     pub fn clue_len(&self) -> usize {
         self.clue.chars().count()
     }
+
+    pub fn get_confidence(&self) -> u32 {
+        match self.ai_gen_confidence {
+            None => 0,
+            Some(w) => w,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -48,42 +56,42 @@ mod tests {
     #[test]
     fn key_len_matches()
     {
-        let t = Entry::new("abcd".to_string(), "_".to_string());
+        let t = Entry::new("abcd".to_string(), "_".to_string(), None);
         assert_eq!(t.key_len(), 4);
     }
 
     #[test]
     fn key_len_matches_with_se_chars()
     {
-        let t = Entry::new("öåä1".to_string(), "_".to_string());
+        let t = Entry::new("öåä1".to_string(), "_".to_string(), None);
         assert_eq!(t.key_len(), 4);
     }
 
     #[test]
     fn key_len_matches_with_si_chars()
     {
-        let t = Entry::new("ščž1".to_string(), "_".to_string());
+        let t = Entry::new("ščž1".to_string(), "_".to_string(), None);
         assert_eq!(t.key_len(), 4);
     }
 
     #[test]
     fn clue_len_matches()
     {
-        let t = Entry::new("_".to_string(), "abcd".to_string());
+        let t = Entry::new("_".to_string(), "abcd".to_string(), None);
         assert_eq!(t.clue_len(), 4);
     }
 
     #[test]
     fn clue_len_matches_with_se_chars()
     {
-        let t = Entry::new("_".to_string(), "öåä1".to_string());
+        let t = Entry::new("_".to_string(), "öåä1".to_string(), None);
         assert_eq!(t.clue_len(), 4);
     }
 
     #[test]
     fn clue_len_matches_with_si_chars()
     {
-        let t = Entry::new("_".to_string(), "ščž1".to_string());
+        let t = Entry::new("_".to_string(), "ščž1".to_string(), None);
         assert_eq!(t.clue_len(), 4);
     }
 }
