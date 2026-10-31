@@ -334,7 +334,7 @@ r#"<!DOCTYPE html>
 </div>
 
 <div class="archive-link-container">
-    <a href="./archive/index.html" class="archive-link">
+    <a id="archive-link" href="./archive/index.html" class="archive-link">
         📚 Browse Puzzle Archive
     </a>
 </div>
@@ -525,6 +525,22 @@ document.getElementById("validateBtn").addEventListener("click", () => {{
         saveStorageSet(storage);
     }}
 }});
+
+// ------------------------------
+// Fix the link to the archive page to work before & after the page gets moved to Archive
+// ------------------------------
+document.addEventListener("DOMContentLoaded", () => {{
+    const archiveLinkElement = document.getElementById("archive-link");
+
+    archiveLinkElement.href = window.location.pathname.includes("/archive/")
+            ? "index.html"
+            : "archive/index.html";
+}});
+
+
+// ------------------------------
+// Helper methods
+// ------------------------------
 
 const STORAGE_KEY = "dagens-mini-completed-dates";
 
