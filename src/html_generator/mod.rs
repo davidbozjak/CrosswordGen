@@ -9,6 +9,7 @@ use chrono;
 
 pub fn generate_crossword_html(crossword: &Crossword, ai_gen_clues: &Vec<Entry>, config: &Config) -> String {
     let date_str = chrono::Local::now().date_naive().checked_add_days(chrono::Days::new(1)).expect("REASON").format("%A, %Y-%m-%d").to_string();
+    let completed_key = chrono::Local::now().date_naive().checked_add_days(chrono::Days::new(1)).expect("REASON").format("%Y-%m-%d").to_string();
     
     let output = format!(
 r#"<!DOCTYPE html>
@@ -519,9 +520,8 @@ document.getElementById("validateBtn").addEventListener("click", () => {{
     {{
         //todo: add some kind of celebration?
 
-        let today = new Date().toISOString().slice(0, 10);
         const storage = loadStorageSet();
-        storage.add(today);
+        storage.add("{completed_key}");
         saveStorageSet(storage);
     }}
 }});
@@ -555,6 +555,7 @@ function isNumber(str) {{
 </html>
 "#,
     date = date_str,
+    completed_key = completed_key,
     no_cols = crossword.get_no_cols(),
     solution_definition = generate_solutions_str(crossword),
     clue_definition = generate_clues_str(crossword),
