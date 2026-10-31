@@ -11,8 +11,7 @@ pub fn generate_crossword_html(crossword: &Crossword, ai_gen_clues: &Vec<Entry>,
     let date_str = chrono::Local::now().date_naive().checked_add_days(chrono::Days::new(1)).expect("REASON").format("%A, %Y-%m-%d").to_string();
     
     let output = format!(
-r#"
-<!DOCTYPE html>
+r#"<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -280,6 +279,42 @@ r#"
     .secondary {{
         color: var(--text-secondary);
     }}
+
+    .archive-link-container {{
+        text-align: center;
+        margin: 16px 0 32px;
+    }}
+
+    .archive-link {{
+        display: inline-block;
+
+        padding: 10px 18px;
+
+        color: var(--blue);
+        background: white;
+
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+
+        font-weight: 600;
+        text-decoration: none;
+
+        transition:
+            background .2s ease,
+            border-color .2s ease,
+            transform .15s ease;
+    }}
+
+    .archive-link:hover {{
+        background: #f1f5f9;
+        border-color: var(--blue);
+
+        transform: translateY(-1px);
+    }}
+
+    .archive-link:active {{
+        transform: translateY(0);
+    }}
     </style>
 </head>
 <body>
@@ -295,6 +330,12 @@ r#"
     <ul id="horizontalClueList"></ul>
     <h3>Lodrätt</h3>
     <ul id="verticalClueList"></ul>
+</div>
+
+<div class="archive-link-container">
+    <a href="./archive/index.html" class="archive-link">
+        📚 Browse Puzzle Archive
+    </a>
 </div>
 
 <div class="toolbar">
@@ -470,9 +511,41 @@ document.getElementById("validateBtn").addEventListener("click", () => {{
             }}
         }}
     }});
+    
+    let all_correct = Array.from(inputs)
+        .every(w => w.classList.contains("correct"));
+
+    if (all_correct)
+    {{
+        //todo: add some kind of celebration?
+
+        let today = new Date().toISOString().slice(0, 10);
+        const storage = loadStorageSet();
+        storage.add(today);
+        saveStorageSet(storage);
+    }}
 }});
 
-function isNumber(str){{
+const STORAGE_KEY = "dagens-mini-completed-dates";
+
+function loadStorageSet() {{
+    const raw = localStorage.getItem(STORAGE_KEY);
+
+    if (!raw) {{
+        return new Set();
+    }}
+
+    return new Set(JSON.parse(raw));
+}}
+
+function saveStorageSet(set) {{
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify([...set])
+    );
+}}
+
+function isNumber(str) {{
     const tryNum = Number(str);
     return !isNaN(tryNum);
 }}
