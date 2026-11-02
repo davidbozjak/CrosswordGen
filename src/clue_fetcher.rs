@@ -45,11 +45,15 @@ fn get_ai_clue(answer:String, config: &Config) -> Result<Entry, Box<dyn std::err
             },
             {
                 "role": "user",
-                "content": format!("Generate 5 or more short, clever and qurky clues to which the resposne is '{answer}'. Generate a confidence score for each on the range of 0-100 signifying how likely a normal swedish speaker is likely to understand this clue. Never include the provided answer in the clue you generate.")
+                "content": format!("Generate 5 or more short clues in the swedish language to which the response is a swedish word/term. The answer is: '{answer}'. Like on other crossword puzzles, the clue can lead to a swedish word or term or phrase. If you choose to interpret the answer as several words squeezed together without a space indicate that in the clue. You can also choose to interpret it as a word in another language than swedish, however in those cases always indicate which language in the clue. Never include the provided answer in the clue you generate.")
             },
             {
                 "role": "user",
-                "content": "Respond in JSON using schme {clue, confidence_score}. Return only valid JSON. Do not use markdown. Do not wrap the response in ``` blocks."
+                "content": "Generate a confidence score for each of the clues you generate on the range of 0-100 signaling how good and understandable the clue is to a normal swedish speaker."
+            },
+            {
+                "role": "user",
+                "content": "Respond in JSON using schema {clue, confidence_score}. Return only valid JSON. Do not use markdown. Do not wrap the response in ``` blocks."
             }
         ]
     });
@@ -71,4 +75,23 @@ fn get_ai_clue(answer:String, config: &Config) -> Result<Entry, Box<dyn std::err
     let best = &results.last().unwrap();
 
     Ok(Entry::new(answer, best.clue.clone(), Some(best.confidence_score)))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::entry::Entry;
+    
+    use super::*;
+
+    #[cfg(feature = "prompt_test-manual")]
+    #[test]
+    fn test_ai_propt() {
+        let config = Config::load();
+        let answer = "amnn".to_string();
+        let entry = get_clue(answer, &config).unwrap();
+
+        println!("answer: {}, clue: {}, confidence: {}", entry.get_key(), entry.get_clue(), entry.get_confidence());
+
+        assert!(!entry.get_clue().is_empty());
+    }
 }
