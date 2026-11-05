@@ -238,20 +238,10 @@ r#"<!DOCTYPE html>
         display: flex;
         flex-direction: column;
         gap: 12px;
-
-        overflow: hidden;
-
-        max-height: 1000px;
-        opacity: 1;
-
-        transition:
-            max-height .3s ease,
-            opacity .3s ease;
     }}
 
     .component-list.collapsed {{
-        max-height: 0;
-        opacity: 0;
+        display: none;
     }}
 
     .submit-component {{
