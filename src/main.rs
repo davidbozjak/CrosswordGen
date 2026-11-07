@@ -46,8 +46,6 @@ fn main() {
     }
     
     if let Some(best) = & mut best_crossword {
-        crossword_printer::print(&best);
-
         let missing_words = crossword_eval::get_missing_words(&best);
         println!("Missing words: {:?}", missing_words);
 
@@ -65,6 +63,10 @@ fn main() {
                 generated_clues.push(clue);
             }
         }
+
+        best.set_display_numbers();
+
+        crossword_printer::print(&best);
 
         let _ = fs::write("output/index.html", html_generator::generate_crossword_html(&best, &generated_clues, &config) + "\n");
 

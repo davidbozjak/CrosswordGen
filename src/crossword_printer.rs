@@ -19,11 +19,7 @@ pub fn print(crossword: &Crossword) {
             match crossword.get_cellvalue_at(x, y) {
                 Some(CellValue::ClueEnd()) => {print!(" ")}
                 Some(CellValue::Normal(w)) => print!("{}", w),
-                Some(CellValue::ClueStart(w)) => match w {
-                        ClueStartCell::Horizontal(ww)
-                        | ClueStartCell::Vertical(ww)
-                        | ClueStartCell::HorizontalVertical(ww) => print!("{}", ww),
-                    }
+                Some(CellValue::ClueStart(w)) => print!("{}", crossword.get_clues().find(|c| c.id == w.get_id()).unwrap().display_number),
                 None => print!(" ")
             };
         }
@@ -33,17 +29,20 @@ pub fn print(crossword: &Crossword) {
     println!("");
     println!("");
 
+    let mut sorted_clues = crossword.get_clues().collect::<Vec<_>>();
+    sorted_clues.sort_by_key(|w| w.display_number);
+
     println!("Horizontal clues:");
 
-    for clue in crossword.get_clues().filter(|c| c.direction == ClueDirection::Horizontal) {
-        println!("{}: {}", clue.id, clue.text);
+    for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Horizontal) {
+        println!("{}: {}", clue.display_number, clue.text);
     }
 
     println!("");
 
     println!("Vertical clues:");
 
-    for clue in crossword.get_clues().filter(|c| c.direction == ClueDirection::Vertical) {
-        println!("{}: {}", clue.id, clue.text);
+    for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Vertical) {
+        println!("{}: {}", clue.display_number, clue.text);
     }
 }

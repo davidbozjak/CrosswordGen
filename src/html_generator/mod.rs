@@ -608,11 +608,7 @@ fn generate_solutions_str(crossword: &Crossword) -> String
                 match crossword.get_cellvalue_at(x, y) {
                     Some(CellValue::ClueEnd()) => "null, ".to_string(),
                     Some(CellValue::Normal(w)) => format!("\"{}\", ", w),
-                    Some(CellValue::ClueStart(w)) => match w {
-                        ClueStartCell::Horizontal(ww)
-                        | ClueStartCell::Vertical(ww)
-                        | ClueStartCell::HorizontalVertical(ww) => format!("\"{}\", ", ww),
-                    }
+                    Some(CellValue::ClueStart(w)) => format!("\"{}\", ", crossword.get_clues().find(|c| c.id == w.get_id()).unwrap().display_number),
                     None => "null, ".to_string()
                 }.as_str());
             }
@@ -644,16 +640,16 @@ fn generate_clues_str(crossword: &Crossword) -> String
     let mut output:String = String::from("horizontalClues: [\n");
 
     let mut sorted_clues: Vec<_> = crossword.get_clues().collect();
-    sorted_clues.sort_by_key(|w| w.id);
+    sorted_clues.sort_by_key(|w| w.display_number);
 
     for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Horizontal) {
-        output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.id, clue.text).as_str());
+        output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.display_number, clue.text).as_str());
     }
 
     output.push_str("],  \nverticalClues: [\n");
 
     for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Vertical) {
-        output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.id, clue.text).as_str());
+        output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.display_number, clue.text).as_str());
     }
 
     output.push_str("]");

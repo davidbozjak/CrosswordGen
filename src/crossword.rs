@@ -10,6 +10,16 @@ pub enum ClueStartCell
     HorizontalVertical(u32)
 }
 
+impl ClueStartCell {
+    pub fn get_id(&self) -> u32 {
+        match self {
+            ClueStartCell::Horizontal(id) => *id,
+            ClueStartCell::Vertical(id) => *id,
+            ClueStartCell::HorizontalVertical(id) => *id
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum CellValue {
     Normal(char),
@@ -38,6 +48,7 @@ impl Cell {
 
 pub struct Clue {
     pub id: u32,
+    pub display_number: u32,
     pub text: String,
     pub direction: ClueDirection
 }
@@ -298,7 +309,7 @@ impl Crossword
             };
         }
 
-        self.clues.push(Clue {id: clue_id, text: entry.get_clue().to_string(), direction});
+        self.clues.push(Clue {id: clue_id, display_number: 0, text: entry.get_clue().to_string(), direction});
 
         // First element was handled above, iterate once before handling next elements
         x = x_incrementor(x);
@@ -332,6 +343,27 @@ impl Crossword
                 CellValue::ClueStart(_) => {}, // It is OK to end with a ClueStart cell, so do nothing
                 CellValue::Normal(_) => panic!("Should never happen, bug in try_fit logic"),
             }
+        }
+    }
+
+    pub fn set_display_numbers(&mut self) {
+        let mut display_number = 1;
+
+        let mut sorted_start_cells = self.elements.iter_mut()
+            .filter(|w| matches!(w.value, CellValue::ClueStart(_)))
+            .collect::<Vec<_>>();
+        sorted_start_cells
+            .sort_by_key(|w| w.pos_y * 1000 + w.pos_x);
+
+        for start_cell in sorted_start_cells {
+            let CellValue::ClueStart(start) = start_cell.value else { panic!("Expecting that the filter above will filter to only clue_start") };
+            let clue_id = start.get_id();
+            
+            self.clues.iter_mut().filter(|c| c.id == clue_id).for_each(|clue| {
+                clue.display_number = display_number;
+            }); 
+
+            display_number += 1;  
         }
     }
 
@@ -561,5 +593,26 @@ mod tests {
         let cellvalue = crossword.get_cellvalue_at(2, -1);
         assert!((cellvalue.is_some()));
         assert!((cellvalue.unwrap() == &CellValue::ClueStart(ClueStartCell::HorizontalVertical(2))));
+    }
+
+    #[test]
+    fn set_display_numbers_handles_shared_clue_space()
+    {
+        let entries = [
+            Entry::new("abcd".to_string(), "abcd".to_string(), None),
+            Entry::new("bef".to_string(), "bef".to_string(), None),
+            Entry::new("gdhi".to_string(), "gdhi".to_string(), None),
+            Entry::new("jgkl".to_string(), "jgkl".to_string(), None),
+        ];
+
+        let mut crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        crossword.set_display_numbers();
+
+        crate::crossword_printer::print(&crossword);
+
+        let clues = crossword.get_clues().collect::<Vec<&Clue>>();
+        assert!(clues.iter().count() == 4);
+        assert!(clues.iter().all(|w| w.display_number >= 1 && w.display_number <= 3));  // since two clues share one starting cell, the display number is the same for both of them
     }
 }
