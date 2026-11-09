@@ -19,9 +19,9 @@ fn main() {
     let config = Config::load();
 
     // get size of the crossword from the command line or use the default size of 12x12
-    let maxPuzzleSize: u8 = std::env::args().nth(1).and_then(|s| s.parse::<u8>().ok()).unwrap_or(12);
+    let max_puzzle_size: u8 = std::env::args().nth(1).and_then(|s| s.parse::<u8>().ok()).unwrap_or(12);
 
-    println!("Generating crossword of size {}x{}", maxPuzzleSize, maxPuzzleSize);
+    println!("Generating crossword of size {}x{}", max_puzzle_size, max_puzzle_size);
 
     let entries_apiresult = get_data(&config);
 
@@ -38,7 +38,7 @@ fn main() {
     let mut best_score: f32 = 0.0;
 
     for _ in 0..5 {
-        let crossword = Crossword::generate(maxPuzzleSize, maxPuzzleSize, entries.clone(), & mut DefaultRandomProvider::new());
+        let crossword = Crossword::generate(max_puzzle_size, max_puzzle_size, entries.clone(), & mut DefaultRandomProvider::new());
 
         let score = crossword_eval::get_crossword_fitness(&crossword);
 
