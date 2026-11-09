@@ -37,7 +37,7 @@ fn get_ai_clue(answer:String, config: &Config) -> Result<Entry, Box<dyn std::err
     );
 
     let body = json!({
-        "model": "gpt-4.1-mini",
+        "model": "gpt-6-luna",
         "messages": [
             {
                 "role": "system",
@@ -87,8 +87,8 @@ mod tests {
     #[test]
     fn test_ai_propt() {
         let config = Config::load();
-        let answer = "amnn".to_string();
-        let entry = get_clue(answer, &config).unwrap();
+        let answer = "lia".to_string();
+        let entry = get_ai_clue(answer, &config).unwrap();
 
         println!("answer: {}, clue: {}, confidence: {}", entry.get_key(), entry.get_clue(), entry.get_confidence());
 
