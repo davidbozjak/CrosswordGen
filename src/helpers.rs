@@ -51,6 +51,37 @@ pub fn get_missing_words(crossword: &Crossword) -> Vec<String> {
     return missing_words;
 }
 
+pub fn get_all_words(crossword: &Crossword) -> Vec<String> {
+    let mut words: Vec<String> = Vec::new();
+    
+    for x in crossword.min_x()..crossword.max_x() {
+        for y in crossword.min_y()..crossword.max_y() {
+            
+            let cell = crossword.get_cellvalue_at(x, y);
+
+            match cell {
+                Some(crate::crossword::CellValue::Normal(_)) => {},
+                _ => { 
+                    
+                    let horizontal_str = get_word_from_cell(crossword, x, y, ClueDirection::Horizontal);
+
+                    if horizontal_str.len() > 0 {
+                        words.push(horizontal_str);
+                    }
+                
+                    let vertical_str = get_word_from_cell(crossword, x, y, ClueDirection::Vertical);
+
+                    if vertical_str.len() > 0 {
+                        words.push(vertical_str);
+                    }
+                }
+            }
+        }
+    }
+
+    return words;
+}
+
 fn get_word_from_cell(crossword: &Crossword, start_x: i32, start_y: i32, direction: crate::crossword::ClueDirection) -> String {
     let mut word = String::new();
 
