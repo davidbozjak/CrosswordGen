@@ -51,7 +51,7 @@ fn main() {
     }
     
     if let Some(best) = & mut best_crossword {
-        let missing_words = crossword_eval::get_missing_words(&best);
+        let missing_words = helpers::get_missing_words(&best);
         println!("Missing words: {:?}", missing_words);
 
         let _ = fs::write("output/missing_words.txt", missing_words.join("\n") + "\n");
