@@ -15,6 +15,8 @@ pub fn get_crossword_fitness(crossword: &Crossword) -> f32 {
 
     let average_score = scores.iter().sum::<f32>() / scores.len() as f32;
     
+    assert!((0.0..=1.0).contains(&average_score), "Expected score between 0.0 and 1.0, got: {}", average_score);
+
     return average_score;
 }
 
@@ -24,8 +26,11 @@ fn get_cross_connected_score(crossword: &Crossword) -> f32 {
     let max_possible = cells.iter().count() * 2;
 
     let actual = cells.iter().map(|w| w.get_clue_belonging_count()).sum::<usize>();
+    let score = actual as f32 / max_possible as f32;
+    
+    assert!((0.0..=1.0).contains(&score), "Expected score between 0.0 and 1.0, got: {}", score);
 
-    return actual as f32 / max_possible as f32;
+    return score;
 }
 
 fn get_clue_len_score(crossword: &Crossword) -> f32 {
@@ -34,6 +39,8 @@ fn get_clue_len_score(crossword: &Crossword) -> f32 {
     
     let count_over_1 = lengths.iter().filter(|w| **w > 1).count();
     let score = count_over_1 as f32 / lengths.len() as f32;
+
+    assert!((0.0..=1.0).contains(&score), "Expected score between 0.0 and 1.0, got: {}", score);
 
     return score;
 }
