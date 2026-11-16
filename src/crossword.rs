@@ -464,7 +464,7 @@ mod tests {
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
-        crate::crossword_printer::print(&crossword);
+        //crate::crossword_printer::print(&crossword);
 
         assert!(crossword.get_clues().count() == 3);
     }
@@ -479,7 +479,7 @@ mod tests {
 
         let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
 
-        crate::crossword_printer::print(&crossword);
+        //crate::crossword_printer::print(&crossword);
 
         assert!(crossword.get_clues().count() == 2);
 
