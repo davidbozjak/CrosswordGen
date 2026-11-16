@@ -7,6 +7,7 @@ mod crossword_eval;
 mod helpers;
 mod clue_fetcher;
 mod config;
+mod macros;
 
 use crossword::Crossword;
 use config::Config;
@@ -62,7 +63,7 @@ fn main() {
             if let Ok(clue) = clue_fetcher::get_clue(word.clone(), &config) {
                 let added = &best.try_add_entry(&clue);
                 if !added {
-                    println!("Failed to add {}, unexpected how this can happen. To investigate", clue.get_clue());
+                    debug_panic_warn!("Failed to add {}, unexpected how this can happen. To investigate", clue.get_clue());
                 }
 
                 generated_clues.push(clue);

@@ -37,6 +37,11 @@ fn get_clue_len_score(crossword: &Crossword) -> f32 {
     let words = helpers::get_all_words(crossword);
     let lengths = words.into_iter().map(|w| w.chars().count()).collect::<Vec<usize>>();
     
+    if lengths.len() == 0 {
+        crate::debug_panic_warn!("Not expecting ever to get no words from crossword - check for bugs in get_all_words() function");
+        return 0.0;
+    }
+
     let count_over_1 = lengths.iter().filter(|w| **w > 1).count();
     let score = count_over_1 as f32 / lengths.len() as f32;
 
