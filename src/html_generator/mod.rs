@@ -220,6 +220,10 @@ r#"<!DOCTYPE html>
         cursor: not-allowed;
     }}
 
+    .submit-button.hidden  {{
+        display: none;
+    }}
+
     /* Accessibility */
 
     input:focus,
@@ -271,6 +275,8 @@ r#"<!DOCTYPE html>
         color: var(--text-secondary);
     }}
 
+    /* Archive link */
+
     .archive-link-container {{
         text-align: center;
         margin: 16px 0 32px;
@@ -309,7 +315,6 @@ r#"<!DOCTYPE html>
     
     /* Clue Pop-up */
 
-    
     .clue-popup {{
         position: fixed;
         inset: 0;
@@ -389,6 +394,18 @@ r#"<!DOCTYPE html>
 <div id="aiGenClueList" class="component-list collapsed"></div>
 
 <script>
+
+const ADMIN_KEY = "always-42";
+
+const params = new URLSearchParams(window.location.search);
+
+if (params.get("admin") === ADMIN_KEY) {{
+    localStorage.setItem("isAdmin", "true");
+    }}
+
+const isAdmin =
+    localStorage.getItem("isAdmin") === "true";
+
 // ------------------------------
 // Crossword Data Structure
 // ------------------------------
@@ -484,10 +501,17 @@ crossword.verticalClues.forEach(cl => {{
             `;
 
             const button = component.querySelector(".submit-button");
-
-            button.addEventListener("click", () => {{
-                submitClueToDB(button, item);
-            }});
+            
+            if (!isAdmin)
+            {{
+                button.classList.add("hidden");
+            }}
+            else
+            {{
+                button.addEventListener("click", () => {{
+                    submitClueToDB(button, item);
+                }});
+            }}
 
             container.appendChild(component);
         }});
