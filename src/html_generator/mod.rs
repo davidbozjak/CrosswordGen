@@ -306,6 +306,50 @@ r#"<!DOCTYPE html>
     .archive-link:active {{
         transform: translateY(0);
     }}
+    
+    /* Clue Pop-up */
+
+    
+    .clue-popup {{
+        position: fixed;
+        inset: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: rgba(15, 23, 42, 0.25);
+        backdrop-filter: blur(2px);
+
+        z-index: 1000;
+    }}
+
+    .clue-popup.hidden {{
+        display: none;
+    }}
+
+    .clue-popup-content {{
+        max-width: 85vw;
+        padding: 20px;
+
+        background: white;
+        border-radius: var(--radius);
+
+        border: 2px solid var(--blue);
+
+        box-shadow: 0 8px 30px rgba(0,0,0,.15);
+
+        text-align: center;
+    }}
+
+    .clue-popup-number {{
+        color: var(--blue);
+        font-weight: 700;
+        font-size: 1.1rem;
+
+        margin-bottom: 8px;
+    }}
+ 
     </style>
 </head>
 <body>
@@ -313,6 +357,13 @@ r#"<!DOCTYPE html>
 <h2>Daily SE Mini {date}</h2>
 
 <div id="grid"></div>
+
+<div id="cluePopup" class="clue-popup hidden">
+    <div class="clue-popup-content">
+        <div id="cluePopupNumber" class="clue-popup-number"></div>
+        <div id="cluePopupText"></div>
+    </div>
+</div>
 
 <button id="validateBtn">Validate</button>
 
@@ -368,6 +419,12 @@ for (let r = 0; r < crossword.rows; r++) {{
         else if (isNumber(sol_content)) {{
             cell.classList.add("clue-cell");
             cell.textContent = sol_content;
+
+            cell.style.cursor = "pointer";
+
+            cell.addEventListener("click", () => {{
+                showClue(Number(sol_content));
+            }});
         }} else {{
             const input = document.createElement("input");
             input.maxLength = 1;
@@ -527,6 +584,47 @@ document.addEventListener("DOMContentLoaded", () => {{
             : "archive/index.html";
 }});
 
+//
+// Clue Pop-up functionality
+//
+
+const popup = document.getElementById("cluePopup");
+popup.addEventListener("click", hideClue);
+
+const popupText = document.getElementById("cluePopupText");
+const popupNumber = document.getElementById("cluePopupNumber");
+
+function showClue(number) {{
+
+    let verticalClue = crossword.verticalClues.find(w => w.number == number)?.clue ?? "";
+    let horizontalClue = crossword.horizontalClues.find(w => w.number == number)?.clue ?? "";
+
+    let text;
+    if (verticalClue != "" && horizontalClue != "")
+    {{
+        text = "<b>Vertical:</b> " + verticalClue + "<br><b>Horizontal: </b>" + horizontalClue; 
+    }}
+    else if (verticalClue != "")
+    {{
+        text = verticalClue;
+    }}
+    else if (horizontalClue != "")
+    {{
+        text = horizontalClue;
+    }}
+    else 
+    {{
+        throw new Exception("Expecting at least one clue to be avaliable");
+    }}
+
+    popupNumber.textContent = number;
+    popupText.innerHTML = text;
+    popup.classList.remove("hidden");
+}}
+
+function hideClue() {{
+    popup.classList.add("hidden");
+}}
 
 // ------------------------------
 // Helper methods
@@ -555,6 +653,7 @@ function isNumber(str) {{
     const tryNum = Number(str);
     return !isNaN(tryNum);
 }}
+
 </script>
 
 </body>
