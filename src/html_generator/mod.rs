@@ -443,14 +443,14 @@ for (let r = 0; r < crossword.rows; r++) {{
 const horizontalClueList = document.getElementById("horizontalClueList");
 crossword.horizontalClues.forEach(cl => {{
     const li = document.createElement("li");
-    li.textContent = `${{cl.number}}: ${{cl.clue}}`;
+    li.textContent = `${{cl.number}}: ${{cl.clue}} (${{cl.answerLen}})`;
     horizontalClueList.appendChild(li);
 }});
 
 const verticalClueList = document.getElementById("verticalClueList");
 crossword.verticalClues.forEach(cl => {{
     const li = document.createElement("li");
-    li.textContent = `${{cl.number}}: ${{cl.clue}}`;
+    li.textContent = `${{cl.number}}: ${{cl.clue}}  (${{cl.answerLen}})`;
     verticalClueList.appendChild(li);
 }});
 
@@ -596,21 +596,21 @@ const popupNumber = document.getElementById("cluePopupNumber");
 
 function showClue(number) {{
 
-    let verticalClue = crossword.verticalClues.find(w => w.number == number)?.clue ?? "";
-    let horizontalClue = crossword.horizontalClues.find(w => w.number == number)?.clue ?? "";
+    let verticalClue = crossword.verticalClues.find(w => w.number == number);
+    let horizontalClue = crossword.horizontalClues.find(w => w.number == number);
 
     let text;
-    if (verticalClue != "" && horizontalClue != "")
+    if (verticalClue != null && horizontalClue != null)
     {{
-        text = "<b>Vertical:</b> " + verticalClue + "<br><b>Horizontal: </b>" + horizontalClue; 
+        text = "<b>Vertical:</b> " + verticalClue.clue + " (" + verticalClue.answerLen + ")<br><b>Horizontal: </b>" + horizontalClue.clue + " (" + horizontalClue.answerLen + ")"; 
     }}
-    else if (verticalClue != "")
+    else if (verticalClue != null)
     {{
-        text = verticalClue;
+        text = verticalClue.clue + " (" + verticalClue.answerLen + ")";
     }}
-    else if (horizontalClue != "")
+    else if (horizontalClue != null)
     {{
-        text = horizontalClue;
+        text = horizontalClue.clue + " (" + horizontalClue.answerLen + ")";
     }}
     else 
     {{
@@ -725,14 +725,14 @@ fn generate_clues_str(crossword: &Crossword) -> String
     /*
     Output expected to look like this:
     horizontalClues: [
-            {{ number: 1, clue: "Greeting (5 letters)" }},
-            {{ number: 2, clue: "Italian food (5 letters)" }},
-            {{ number: 3, clue: "Someone who writes software (5 letters)" }}
+            {{ number: 1, clue: "Greeting (5 letters)" answerLen: 2 }},
+            {{ number: 2, clue: "Italian food (5 letters)" answerLen: 3 }},
+            {{ number: 3, clue: "Someone who writes software (5 letters)" answerLen: 4 }}
         ];
     verticalClues: [
-            {{ number: 1, clue: "Greeting (5 letters)" }},
-            {{ number: 2, clue: "Italian food (5 letters)" }},
-            {{ number: 3, clue: "Someone who writes software (5 letters)" }}
+            {{ number: 1, clue: "Greeting (5 letters)", answerLen: 2 }},
+            {{ number: 2, clue: "Italian food (5 letters)" answerLen: 3 }},
+            {{ number: 3, clue: "Someone who writes software (5 letters)" answerLen: 4 }}
         ]
     */
 
@@ -742,13 +742,13 @@ fn generate_clues_str(crossword: &Crossword) -> String
     sorted_clues.sort_by_key(|w| w.display_number);
 
     for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Horizontal) {
-        output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.display_number, clue.text).as_str());
+        output.push_str(format!("{{ number: {}, clue: \"{}\", answerLen: \"{}\"}}, \n", clue.display_number, clue.text, clue.answer_len).as_str());
     }
 
     output.push_str("],  \nverticalClues: [\n");
 
     for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Vertical) {
-        output.push_str(format!("{{ number: {}, clue: \"{}\" }}, \n", clue.display_number, clue.text).as_str());
+        output.push_str(format!("{{ number: {}, clue: \"{}\", answerLen: \"{}\" }}, \n", clue.display_number, clue.text, clue.answer_len).as_str());
     }
 
     output.push_str("]");

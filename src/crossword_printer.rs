@@ -35,7 +35,7 @@ pub fn print(crossword: &Crossword) {
     println!("Horizontal clues:");
 
     for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Horizontal) {
-        println!("{}: {}", clue.display_number, clue.text);
+        println!("{}: {} ({})", clue.display_number, clue.text, clue.answer_len);
     }
 
     println!("");
@@ -43,6 +43,6 @@ pub fn print(crossword: &Crossword) {
     println!("Vertical clues:");
 
     for clue in sorted_clues.iter().filter(|w| w.direction == ClueDirection::Vertical) {
-        println!("{}: {}", clue.display_number, clue.text);
+        println!("{}: {} ({})", clue.display_number, clue.text, clue.answer_len);
     }
 }

@@ -50,7 +50,8 @@ pub struct Clue {
     pub id: u32,
     pub display_number: u32,
     pub text: String,
-    pub direction: ClueDirection
+    pub direction: ClueDirection,
+    pub answer_len: u8,
 }
 
 pub struct Crossword {
@@ -309,7 +310,7 @@ impl Crossword
             };
         }
 
-        self.clues.push(Clue {id: clue_id, display_number: 0, text: entry.get_clue().to_string(), direction});
+        self.clues.push(Clue {id: clue_id, display_number: 0, text: entry.get_clue().to_string(), direction: direction, answer_len: entry.key_len() as u8});
 
         // First element was handled above, iterate once before handling next elements
         x = x_incrementor(x);
@@ -609,10 +610,28 @@ mod tests {
 
         crossword.set_display_numbers();
 
-        crate::crossword_printer::print(&crossword);
+        //crate::crossword_printer::print(&crossword);
 
         let clues = crossword.get_clues().collect::<Vec<&Clue>>();
         assert!(clues.iter().count() == 4);
         assert!(clues.iter().all(|w| w.display_number >= 1 && w.display_number <= 3));  // since two clues share one starting cell, the display number is the same for both of them
+    }
+
+    #[test]
+    fn clue_answer_len_is_set()
+    {
+        let entries = [
+            Entry::new("abcd".to_string(), "unrelated".to_string(), None),
+            Entry::new("aefg".to_string(), "unrelated".to_string(), None),
+            Entry::new("dhij".to_string(), "unrelated".to_string(), None),
+            Entry::new("gklj".to_string(), "unrelated".to_string(), None),
+        ];
+
+        let crossword = Crossword::generate(100, 100, entries, & mut FakeRandomProvider::new(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+        //crate::crossword_printer::print(&crossword);
+
+        assert!(crossword.get_clues().count() == 4);
+        assert!(crossword.get_clues().all(|f|f.answer_len == 4));
     }
 }
